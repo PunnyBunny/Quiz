@@ -14,12 +14,20 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Quiz',
+      title: '測試',
       theme: ThemeData(
         textTheme: TextTheme(
           button: TextStyle(
             fontSize: 20.0,
             color: Colors.white,
+          ),
+          bodyText2: TextStyle(
+            fontSize: 18.0,
+            color: Colors.white,
+          ),
+          headline1: TextStyle( // use headline 1 for warnings
+            fontSize: 24.0,
+            color: Colors.red,
           ),
         ),
         brightness: Brightness.dark,

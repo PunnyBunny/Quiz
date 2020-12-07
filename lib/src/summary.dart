@@ -10,15 +10,15 @@ class _SummaryPageState extends State<SummaryPage> {
   Widget build(BuildContext context) {
     final String finalScore = ModalRoute.of(context).settings.arguments;
 
-    return Scaffold(
-      body: Container(
-        alignment: Alignment.center,
+    return WillPopScope(
+      onWillPop: () async => false,
+      child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
             Text(
-              "Final Score: $finalScore",
-              style: TextStyle(fontSize: 35.0),
+              finalScore,
+              style: TextStyle(fontSize: 40.0, color: Colors.white),
             ),
             Padding(padding: EdgeInsets.all(30.0)),
             MaterialButton(
@@ -29,7 +29,7 @@ class _SummaryPageState extends State<SummaryPage> {
               onPressed: () => Navigator.pushNamedAndRemoveUntil(
                   context, '/', ModalRoute.withName('/info_form')),
               child: Text(
-                "Leave",
+                "離開",
                 style: TextStyle(
                   fontSize: 18.0,
                   color: Colors.white,

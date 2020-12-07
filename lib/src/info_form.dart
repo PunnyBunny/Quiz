@@ -27,147 +27,128 @@ class _InformationFormState extends State<InformationForm> {
     fontSize: 18.0,
   );
 
-  final _warningTextStyle = TextStyle(
-    fontSize: 20.0,
-    color: Colors.red,
-  );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("Basic information"),
+        title: Text("請填寫基本資料"),
         automaticallyImplyLeading: false,
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          _nameField(),
-          _dateOfBirthField(),
-          _genderField(),
-          _submitButton(),
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: TextField(
+              autofocus: false,
+              onChanged: (name) {
+                setState(() {
+                  _userName = name;
+                });
+              },
+              decoration: InputDecoration(
+                hintText: "姓名",
+                hintStyle: _normalTextStyle,
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ), // name
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(2.0)),
+                side: BorderSide(color: Colors.white, width: 1.0),
+                minimumSize: Size(double.infinity, 50.0),
+                primary: Colors.transparent,
+              ),
+              child: Text(
+                "出生日期: " + _toString(_userDateOfBirth),
+                style: _normalTextStyle,
+              ),
+              onPressed: () async {
+                final DateTime picked = await showDatePicker(
+                  context: context,
+                  initialDate: _userDateOfBirth,
+                  firstDate: DateTime(1960),
+                  lastDate: DateTime.now(),
+                );
+                if (picked != null && picked != _userDateOfBirth)
+                  setState(() {
+                    _userDateOfBirth = picked;
+                  });
+              },
+            ),
+          ), // date of birth
+          Padding(
+            padding: EdgeInsets.all(8.0),
+            child: DropdownButton(
+              value: _userGender.isEmpty ? null : _userGender,
+              hint: Text(
+                "性別",
+                style: _normalTextStyle,
+              ),
+              items: [
+                DropdownMenuItem(value: "男", child: Text("男")),
+                DropdownMenuItem(value: "女", child: Text("女")),
+              ],
+              onChanged: (value) {
+                setState(() {
+                  _userGender = value;
+                });
+              },
+            ),
+          ), // gender
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(2.0)),
+              side: BorderSide(color: Colors.white, width: 1.0),
+              primary: Colors.green,
+            ),
+            child: Text("遞交"),
+            onPressed: () async {
+              setState(() {
+                _userNameWarning = _userName.isEmpty;
+                _userDateOfBirthWarning =
+                    _toString(_userDateOfBirth) == _toString(DateTime.now());
+                _userGenderWarning = _userGender.isEmpty;
+              });
+              if (!_userNameWarning &&
+                  !_userDateOfBirthWarning &&
+                  !_userGenderWarning) {
+                // all information is correctly filed
+                currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
+
+                if (!_loadedJson) {
+                  String json = await rootBundle.loadString('assets/data.json');
+                  List<dynamic> loaded = jsonDecode(json);
+                  loaded.forEach((data) {
+                    quizzes.add(Quiz.fromJson(data));
+                  });
+                  _loadedJson = true;
+                }
+                Navigator.pushNamed(context, '/');
+              }
+            },
+          ),
           Padding(padding: EdgeInsets.all(18.0)),
           Text(
-            _userNameWarning ? "PLEASE FILL IN YOUR NAME" : "",
-            style: _warningTextStyle,
+            _userNameWarning ? "請填寫姓名" : "",
+            style: Theme.of(context).textTheme.headline1,
           ),
           Text(
-            _userDateOfBirthWarning ? "PLEASE FILL IN YOUR DOB" : "",
-            style: _warningTextStyle,
+            _userDateOfBirthWarning ? "請填寫出生日期" : "",
+            style: Theme.of(context).textTheme.headline1,
           ),
           Text(
-            _userGenderWarning ? "PLEASE FILL IN YOUR GENDER" : "",
-            style: _warningTextStyle,
+            _userGenderWarning ? "請填寫性別" : "",
+            style: Theme.of(context).textTheme.headline1,
           )
         ],
       ),
-    );
-  }
-
-  Widget _nameField() {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: TextField(
-        autofocus: false,
-        onChanged: (name) {
-          setState(() {
-            _userName = name;
-          });
-        },
-        decoration: InputDecoration(
-          hintText: "Your Name",
-          hintStyle: _normalTextStyle,
-          border: OutlineInputBorder(),
-        ),
-      ),
-    );
-  }
-
-  Widget _dateOfBirthField() {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
-          side: BorderSide(color: Colors.white, width: 1.0),
-          minimumSize: Size(double.infinity, 50.0),
-          primary: Colors.transparent,
-        ),
-        child: Text(
-          "Your date of birth: " + _toString(_userDateOfBirth),
-          style: _normalTextStyle,
-        ),
-        onPressed: () async {
-          final DateTime picked = await showDatePicker(
-            context: context,
-            initialDate: _userDateOfBirth,
-            firstDate: DateTime(1960),
-            lastDate: DateTime.now(),
-          );
-          if (picked != null && picked != _userDateOfBirth)
-            setState(() {
-              _userDateOfBirth = picked;
-            });
-        },
-      ),
-    );
-  }
-
-  Widget _genderField() {
-    return Padding(
-      padding: EdgeInsets.all(8.0),
-      child: DropdownButton(
-        value: _userGender.isEmpty ? null : _userGender,
-        hint: Text(
-          "Your gender",
-          style: _normalTextStyle,
-        ),
-        items: [
-          DropdownMenuItem(value: "male", child: Text("Male")),
-          DropdownMenuItem(value: "female", child: Text("Female")),
-        ],
-        onChanged: (value) {
-          setState(() {
-            _userGender = value;
-          });
-        },
-      ),
-    );
-  }
-
-  Widget _submitButton() {
-    return MaterialButton(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
-      color: Colors.green,
-      child: Text("Submit"),
-      onPressed: () async {
-        setState(() {
-          _userNameWarning = _userName.isEmpty;
-          _userDateOfBirthWarning =
-              _toString(_userDateOfBirth) == _toString(DateTime.now());
-          _userGenderWarning = _userGender.isEmpty;
-        });
-        if (!_userNameWarning &&
-            !_userDateOfBirthWarning &&
-            !_userGenderWarning) {
-          // all information is correctly filed
-          currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
-
-          if (!_loadedJson) {
-            String json = await rootBundle.loadString('assets/data.json');
-            List<dynamic> loaded = jsonDecode(json);
-            loaded.forEach((data) {
-              quizzes.add(Quiz.fromJson(data));
-            });
-            _loadedJson = true;
-          }
-          Navigator.pushNamed(context, '/');
-        }
-      },
     );
   }
 }
