@@ -17,6 +17,7 @@ class Quiz extends StatefulWidget {
   factory Quiz.fromJson(Map<String, dynamic> json) => _$QuizFromJson(json);
 
   Map<String, dynamic> toJson() => _$QuizToJson(this);
+
   final String title;
   final List<String> questions, correctAnswers, audios, images;
   final List<List<String>> choices;
