@@ -94,12 +94,18 @@ class _QuizState extends State<Quiz> {
               ),
               actions: [
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.transparent,
+                  ),
                   onPressed: () {
                     Navigator.popUntil(context, ModalRoute.withName('/'));
                   },
                   child: Text('退出'),
                 ),
                 ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: Colors.transparent,
+                  ),
                   onPressed: () {
                     Navigator.pop(context);
                   },
@@ -239,13 +245,15 @@ class _QuizState extends State<Quiz> {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: Text('注意'),
                 content: Text(
                   '請先完成所有題目',
                   style: Theme.of(context).textTheme.headline1,
                 ),
                 actions: [
                   ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.transparent,
+                    ),
                     onPressed: () {
                       Navigator.pop(context);
                     },

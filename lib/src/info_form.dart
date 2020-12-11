@@ -145,7 +145,6 @@ class _InformationFormState extends State<InformationForm> {
             context: context,
             builder: (context) {
               return AlertDialog(
-                title: Text('注意'),
                 content: Text(
                   '${_userNameWarning ? '請填寫姓名\n' : ''}'
                   '${_userDateOfBirthWarning ? '請填寫出生日期\n' : ''}'
