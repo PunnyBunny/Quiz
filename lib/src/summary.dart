@@ -21,7 +21,7 @@ class _SummaryPageState extends State<SummaryPage> {
         finalScore = '最終分數: ${result.score}/${result.testFullScore}';
       });
       final response = await http.post(
-        "http://testquiz.hopto.org:5000",
+        'http://testquiz.hopto.org:5000',
         body: {
           'action': 'add_new',
           'name': result.name,
@@ -55,10 +55,10 @@ class _SummaryPageState extends State<SummaryPage> {
                   borderRadius: BorderRadius.circular(12),
                 ),
                 color: Colors.blue,
-                onPressed: () => Navigator.pushNamedAndRemoveUntil(
-                    context, '/', ModalRoute.withName('/info_form')),
+                onPressed: () => Navigator.popUntil(
+                    context, ModalRoute.withName('/')),
                 child: Text(
-                  "離開",
+                  '離開',
                   style: TextStyle(
                     fontSize: 18.0,
                     color: Colors.white,

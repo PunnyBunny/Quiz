@@ -18,26 +18,26 @@ class _HomePageState extends State<HomePage> {
       buttons.add(Padding(
           padding: EdgeInsets.all(12.0),
           child: _button(
-              quiz.title,
-              _randomColor.randomColor(
+              title: quiz.title,
+              color: _randomColor.randomColor(
                   colorHue: ColorHue.blue,
                   colorBrightness: ColorBrightness.dark),
-              () => Navigator.push(
+              action: () => Navigator.push(
                   context, MaterialPageRoute(builder: (context) => quiz)))));
     });
     return Scaffold(
       appBar: AppBar(
-        title: Text("考驗"),
+        title: Text('考驗'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[Text("請選擇一個測試")] + buttons,
+        children: <Widget>[Text('請選擇一個測試')] + buttons,
       ),
     );
   }
 
-  Widget _button(String title, Color color, Function func) {
+  Widget _button({String title, Color color, Function action}) {
     return Padding(
       padding: EdgeInsets.only(left: 10.0, right: 10.0),
       child: ElevatedButton(
@@ -51,7 +51,7 @@ class _HomePageState extends State<HomePage> {
             colorBrightness: ColorBrightness.dark,
           ),
         ),
-        onPressed: func,
+        onPressed: action,
         child: Text(title),
       ),
     );

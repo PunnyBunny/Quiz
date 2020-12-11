@@ -31,12 +31,11 @@ class _QuizState extends State<Quiz> {
   List<String> _choices;
   final _assetsAudioPlayer = AssetsAudioPlayer();
   int _noOfQuestionsFilled = 0;
-  bool _submitWarning = false;
 
   @override
   void initState() {
     super.initState();
-    _choices = List<String>.filled(widget.length, "", growable: true);
+    _choices = List<String>.filled(widget.length, '', growable: true);
   }
 
   @override
@@ -51,7 +50,7 @@ class _QuizState extends State<Quiz> {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: <Widget>[
                 Text(
-                  "第 ${_questionNumber + 1}/${widget.length} 題",
+                  '第 ${_questionNumber + 1}/${widget.length} 題',
                   style: TextStyle(fontSize: 22.0),
                 ),
               ],
@@ -60,8 +59,32 @@ class _QuizState extends State<Quiz> {
           leading: IconButton(
             icon: Icon(Icons.arrow_back),
             onPressed: () {
-              Navigator.pushNamedAndRemoveUntil(
-                  context, '/', ModalRoute.withName('/info_form'));
+              showDialog(
+                context: context,
+                builder: (context) {
+                  return AlertDialog(
+                    content: Text(
+                      '確認退出？',
+                      style: Theme.of(context).textTheme.headline1,
+                    ),
+                    actions: [
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.popUntil(
+                              context, ModalRoute.withName('/'));
+                        },
+                        child: Text('退出'),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                        },
+                        child: Text('取消'),
+                      )
+                    ],
+                  );
+                },
+              );
             },
           ),
         ),
@@ -83,11 +106,11 @@ class _QuizState extends State<Quiz> {
                                 minimumSize: Size(150.0, 25.0),
                                 primary: Colors.lightBlue,
                               ),
-                              child: Text("播放聲音"),
+                              child: Text('播放聲音'),
                               onPressed: () {
                                 _assetsAudioPlayer.open(
                                   Audio(
-                                    "assets/audios/${widget.audios[_questionNumber]}.mp3",
+                                    'assets/audios/${widget.audios[_questionNumber]}.mp3',
                                   ),
                                 );
                               },
@@ -126,7 +149,6 @@ class _QuizState extends State<Quiz> {
                               if (_questionNumber > 0)
                                 setState(() {
                                   _questionNumber--;
-                                  _submitWarning = false;
                                 });
                             },
                           ),
@@ -141,7 +163,7 @@ class _QuizState extends State<Quiz> {
                                   borderRadius: BorderRadius.circular(16)),
                               minimumSize: Size(100.0, 50.0),
                             ),
-                            child: Text("遞交"),
+                            child: Text('遞交'),
                             onPressed: () {
                               if (_noOfQuestionsFilled == widget.length) {
                                 int score = 0;
@@ -163,9 +185,28 @@ class _QuizState extends State<Quiz> {
                                   ),
                                 );
                               } else {
-                                setState(() {
-                                  _submitWarning = true;
-                                });
+                                showDialog(
+                                  context: context,
+                                  builder: (context) {
+                                    return AlertDialog(
+                                      title: Text('注意'),
+                                      content: Text(
+                                        '請先完成所有題目',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .headline1,
+                                      ),
+                                      actions: [
+                                        ElevatedButton(
+                                          onPressed: () {
+                                            Navigator.pop(context);
+                                          },
+                                          child: Text('好'),
+                                        )
+                                      ],
+                                    );
+                                  },
+                                );
                               }
                             },
                           ),
@@ -184,16 +225,11 @@ class _QuizState extends State<Quiz> {
                               if (_questionNumber + 1 < widget.length)
                                 setState(() {
                                   _questionNumber++;
-                                  _submitWarning = false;
                                 });
                             },
                           ),
                         ],
                       ),
-                    ),
-                    Text(
-                      _submitWarning ? "請先完成所有題目" : "",
-                      style: Theme.of(context).textTheme.headline1,
                     ),
 
                     // image
@@ -202,7 +238,7 @@ class _QuizState extends State<Quiz> {
                         : Padding(
                             padding: EdgeInsets.all(10.0),
                             child: Image.asset(
-                              "assets/images/${widget.images[_questionNumber]}",
+                              'assets/images/${widget.images[_questionNumber]}',
                             ),
                           ),
                   ],
@@ -231,7 +267,7 @@ class _QuizState extends State<Quiz> {
               ),
               onPressed: () {
                 _assetsAudioPlayer.stop();
-                if (_choices[_questionNumber] == "") {
+                if (_choices[_questionNumber] == '') {
                   setState(() {
                     _noOfQuestionsFilled++;
                   });

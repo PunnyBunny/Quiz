@@ -14,9 +14,9 @@ class InformationForm extends StatefulWidget {
 }
 
 class _InformationFormState extends State<InformationForm> {
-  String _userName = "";
+  String _userName = '';
   DateTime _userDateOfBirth = DateTime.now();
-  String _userGender = "";
+  String _userGender = '';
 
   bool _userNameWarning = false;
   bool _userDateOfBirthWarning = false;
@@ -28,7 +28,7 @@ class _InformationFormState extends State<InformationForm> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text("請填寫基本資料"),
+        title: Text('請填寫基本資料'),
         automaticallyImplyLeading: false,
       ),
       body: Column(
@@ -45,7 +45,7 @@ class _InformationFormState extends State<InformationForm> {
                 });
               },
               decoration: InputDecoration(
-                hintText: "姓名",
+                hintText: '姓名',
                 border: OutlineInputBorder(),
               ),
             ),
@@ -60,7 +60,7 @@ class _InformationFormState extends State<InformationForm> {
                 minimumSize: Size(double.infinity, 50.0),
                 primary: Colors.transparent,
               ),
-              child: Text("出生日期: " + dateFormatter.format(_userDateOfBirth)),
+              child: Text('出生日期: ' + dateFormatter.format(_userDateOfBirth)),
               onPressed: () async {
                 final DateTime picked = await showDatePicker(
                   context: context,
@@ -80,10 +80,10 @@ class _InformationFormState extends State<InformationForm> {
             padding: EdgeInsets.all(8.0),
             child: DropdownButton(
               value: _userGender.isEmpty ? null : _userGender,
-              hint: Text("性別"),
+              hint: Text('性別'),
               items: [
-                DropdownMenuItem(value: "m", child: Text("男")),
-                DropdownMenuItem(value: "f", child: Text("女")),
+                DropdownMenuItem(value: 'm', child: Text('男')),
+                DropdownMenuItem(value: 'f', child: Text('女')),
               ],
               onChanged: (value) {
                 setState(() {
@@ -99,7 +99,7 @@ class _InformationFormState extends State<InformationForm> {
               side: BorderSide(color: Colors.white, width: 1.0),
               primary: Colors.green,
             ),
-            child: Text("遞交"),
+            child: Text('遞交'),
             onPressed: () async {
               setState(() {
                 _userNameWarning = _userName.isEmpty;
@@ -124,22 +124,33 @@ class _InformationFormState extends State<InformationForm> {
                   _loadedJson = true;
                 }
                 Navigator.pushNamed(context, '/');
+              } else {
+                showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Text('注意'),
+                      content: Text(
+                        '${_userNameWarning ? '請填寫姓名\n' : ''}'
+                        '${_userDateOfBirthWarning ? '請填寫出生日期\n' : ''}'
+                        '${_userGenderWarning ? '請填寫性別\n' : ''}',
+                        style: Theme.of(context).textTheme.headline1,
+                      ),
+                      actions: [
+                        ElevatedButton(
+                          onPressed: () {
+                            Navigator.pop(context);
+                          },
+                          child: Text('好'),
+                        )
+                      ],
+                    );
+                  },
+                );
               }
             },
           ),
           Padding(padding: EdgeInsets.all(18.0)),
-          Text(
-            _userNameWarning ? "請填寫姓名" : "",
-            style: Theme.of(context).textTheme.headline1,
-          ),
-          Text(
-            _userDateOfBirthWarning ? "請填寫出生日期" : "",
-            style: Theme.of(context).textTheme.headline1,
-          ),
-          Text(
-            _userGenderWarning ? "請填寫性別" : "",
-            style: Theme.of(context).textTheme.headline1,
-          )
         ],
       ),
     );
