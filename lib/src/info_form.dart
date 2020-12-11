@@ -4,7 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
-import 'basic_quiz.dart';
+import 'quiz.dart';
 import 'date_formatter.dart';
 import 'user_info.dart';
 

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
-import 'basic_quiz.dart';
+import 'quiz.dart';
 
 class HomePage extends StatefulWidget {
   @override

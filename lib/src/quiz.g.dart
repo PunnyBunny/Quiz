@@ -1,6 +1,6 @@
 // GENERATED CODE - DO NOT MODIFY BY HAND
 
-part of 'basic_quiz.dart';
+part of 'quiz.dart';
 
 // **************************************************************************
 // JsonSerializableGenerator

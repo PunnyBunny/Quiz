@@ -5,7 +5,7 @@ import 'package:json_annotation/json_annotation.dart';
 import 'user_info.dart';
 import 'user_result.dart';
 
-part 'basic_quiz.g.dart';
+part 'quiz.g.dart';
 
 var quizzes = List<Quiz>();
 
