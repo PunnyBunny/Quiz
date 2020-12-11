@@ -27,7 +27,7 @@ class _HomePageState extends State<HomePage> {
     });
     return Scaffold(
       appBar: AppBar(
-        title: Text('考驗'),
+        title: Text('測試'),
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
