@@ -50,13 +50,15 @@ class _SummaryPageState extends State<SummaryPage> {
                 style: TextStyle(fontSize: 40.0, color: Colors.white),
               ),
               Padding(padding: EdgeInsets.all(30.0)),
-              MaterialButton(
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  primary: Colors.blue,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
                 ),
-                color: Colors.blue,
-                onPressed: () => Navigator.popUntil(
-                    context, ModalRoute.withName('/')),
+                onPressed: () =>
+                    Navigator.popUntil(context, ModalRoute.withName('/')),
                 child: Text(
                   '離開',
                   style: TextStyle(
