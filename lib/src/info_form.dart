@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'basic_quiz.dart';
+import 'date_formatter.dart';
 import 'user_info.dart';
 
 class InformationForm extends StatefulWidget {
@@ -59,7 +60,7 @@ class _InformationFormState extends State<InformationForm> {
                 minimumSize: Size(double.infinity, 50.0),
                 primary: Colors.transparent,
               ),
-              child: Text("出生日期: " + _toString(_userDateOfBirth)),
+              child: Text("出生日期: " + dateFormatter.format(_userDateOfBirth)),
               onPressed: () async {
                 final DateTime picked = await showDatePicker(
                   context: context,
@@ -67,10 +68,11 @@ class _InformationFormState extends State<InformationForm> {
                   firstDate: DateTime(1960),
                   lastDate: DateTime.now(),
                 );
-                if (picked != null && picked != _userDateOfBirth)
+                if (picked != null && picked != _userDateOfBirth) {
                   setState(() {
                     _userDateOfBirth = picked;
                   });
+                }
               },
             ),
           ), // date of birth
@@ -102,7 +104,8 @@ class _InformationFormState extends State<InformationForm> {
               setState(() {
                 _userNameWarning = _userName.isEmpty;
                 _userDateOfBirthWarning =
-                    _toString(_userDateOfBirth) == _toString(DateTime.now());
+                    dateFormatter.format(_userDateOfBirth) ==
+                        dateFormatter.format(DateTime.now());
                 _userGenderWarning = _userGender.isEmpty;
               });
               if (!_userNameWarning &&
@@ -141,8 +144,4 @@ class _InformationFormState extends State<InformationForm> {
       ),
     );
   }
-}
-
-String _toString(DateTime date) {
-  return "${date.day}/${date.month}/${date.year}";
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:intl/intl.dart';
 
+import 'date_formatter.dart';
 import 'user_result.dart';
 
 class SummaryPage extends StatefulWidget {
@@ -25,7 +25,7 @@ class _SummaryPageState extends State<SummaryPage> {
         body: {
           'action': 'add_new',
           'name': result.name,
-          'date_of_birth': DateFormat("dd-MM-yyyy").format(result.dateOfBirth),
+          'date_of_birth': dateFormatter.format(result.dateOfBirth),
           'gender': result.gender,
           'score': '${result.score}',
           'test_name': result.testName,
