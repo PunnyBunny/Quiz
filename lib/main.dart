@@ -25,7 +25,8 @@ class MyApp extends StatelessWidget {
             fontSize: 18.0,
             color: Colors.white,
           ),
-          headline1: TextStyle( // use headline 1 for warnings
+          headline1: TextStyle(
+            // use headline 1 for warnings
             fontSize: 24.0,
             color: Colors.red,
           ),
