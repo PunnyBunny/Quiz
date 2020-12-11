@@ -2,6 +2,9 @@ import 'package:assets_audio_player/assets_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import 'user_info.dart';
+import 'user_result.dart';
+
 part 'basic_quiz.g.dart';
 
 var quizzes = List<Quiz>();
@@ -147,8 +150,18 @@ class _QuizState extends State<Quiz> {
                                     score++;
                                   }
                                 }
-                                Navigator.pushNamed(context, '/summary',
-                                    arguments: '最終分數: $score/${widget.length}');
+                                Navigator.pushNamed(
+                                  context,
+                                  '/summary',
+                                  arguments: UserResult(
+                                    currentUserInfo.name,
+                                    currentUserInfo.dateOfBirth,
+                                    currentUserInfo.gender,
+                                    score,
+                                    widget.title,
+                                    widget.length,
+                                  ),
+                                );
                               } else {
                                 setState(() {
                                   _submitWarning = true;
@@ -192,7 +205,7 @@ class _QuizState extends State<Quiz> {
                               "assets/images/${widget.images[_questionNumber]}",
                             ),
                           ),
-                    ],
+                  ],
             ),
           ],
         ),

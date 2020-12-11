@@ -23,10 +23,6 @@ class _InformationFormState extends State<InformationForm> {
 
   bool _loadedJson = false;
 
-  final _normalTextStyle = TextStyle(
-    fontSize: 18.0,
-  );
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -49,7 +45,6 @@ class _InformationFormState extends State<InformationForm> {
               },
               decoration: InputDecoration(
                 hintText: "姓名",
-                hintStyle: _normalTextStyle,
                 border: OutlineInputBorder(),
               ),
             ),
@@ -64,10 +59,7 @@ class _InformationFormState extends State<InformationForm> {
                 minimumSize: Size(double.infinity, 50.0),
                 primary: Colors.transparent,
               ),
-              child: Text(
-                "出生日期: " + _toString(_userDateOfBirth),
-                style: _normalTextStyle,
-              ),
+              child: Text("出生日期: " + _toString(_userDateOfBirth)),
               onPressed: () async {
                 final DateTime picked = await showDatePicker(
                   context: context,
@@ -86,13 +78,10 @@ class _InformationFormState extends State<InformationForm> {
             padding: EdgeInsets.all(8.0),
             child: DropdownButton(
               value: _userGender.isEmpty ? null : _userGender,
-              hint: Text(
-                "性別",
-                style: _normalTextStyle,
-              ),
+              hint: Text("性別"),
               items: [
-                DropdownMenuItem(value: "男", child: Text("男")),
-                DropdownMenuItem(value: "女", child: Text("女")),
+                DropdownMenuItem(value: "m", child: Text("男")),
+                DropdownMenuItem(value: "f", child: Text("女")),
               ],
               onChanged: (value) {
                 setState(() {
@@ -120,7 +109,8 @@ class _InformationFormState extends State<InformationForm> {
                   !_userDateOfBirthWarning &&
                   !_userGenderWarning) {
                 // all information is correctly filed
-                currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
+                currentUserInfo =
+                    UserInfo(_userName, _userDateOfBirth, _userGender);
 
                 if (!_loadedJson) {
                   String json = await rootBundle.loadString('assets/data.json');
