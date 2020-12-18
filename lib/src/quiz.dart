@@ -1,6 +1,9 @@
-import 'package:assets_audio_player/assets_audio_player.dart';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:json_annotation/json_annotation.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'user_info.dart';
 import 'user_result.dart';
@@ -50,13 +53,21 @@ class Quiz extends StatefulWidget {
 class _QuizState extends State<Quiz> {
   int _questionNumber = 0;
   List<String> _choices;
-  final _assetsAudioPlayer = AssetsAudioPlayer();
   int _noOfQuestionsFilled = 0;
+  bool _isRecording = false;
+  FlutterSoundPlayer _audioPlayer;
+  FlutterSoundRecorder _audioRecorder;
+
+  void init() async {
+    _audioPlayer = await FlutterSoundPlayer().openAudioSession();
+    _audioRecorder = await FlutterSoundRecorder().openAudioSession();
+  }
 
   @override
   void initState() {
     super.initState();
     _choices = List<String>.filled(widget.length, '', growable: true);
+    init();
   }
 
   @override
@@ -74,9 +85,17 @@ class _QuizState extends State<Quiz> {
         body: ListView(
           children: [
             Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                    _audioButton(),
+                    _playAudioButton(),
                     _question(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _startRecordingAudioButton(),
+                        _stopRecordingAudioButton()
+                      ],
+                    ),
                   ] +
                   _choiceButtons() +
                   [
@@ -139,7 +158,7 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget _audioButton() {
+  Widget _playAudioButton() {
     return widget.type == QuizType.AUDIO
         ? Container()
         : Padding(
@@ -154,11 +173,11 @@ class _QuizState extends State<Quiz> {
               ),
               child: Text('播放聲音'),
               onPressed: () {
-                _assetsAudioPlayer.open(
-                  Audio(
-                    'assets/audios/${widget.audios[_questionNumber]}.mp3',
-                  ),
-                );
+                _audioPlayer.openAudioSession().then((player) async {
+                  await player.startPlayer(
+                      fromURI:
+                          'assets/audios/${widget.audios[_questionNumber]}.mp3');
+                });
               },
             ),
           );
@@ -166,13 +185,62 @@ class _QuizState extends State<Quiz> {
 
   Widget _question() {
     return Padding(
-      padding: EdgeInsets.all(2.0),
+      padding: EdgeInsets.all(20.0),
       child: Text(
         widget.questions[_questionNumber],
         style: TextStyle(
           fontSize: 25.0,
         ),
         textAlign: TextAlign.center,
+      ),
+    );
+  }
+
+  Widget _startRecordingAudioButton() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(200.0, 50.0),
+          primary: _isRecording ? Colors.grey : Colors.blue,
+        ),
+        child: Text("錄製答案"),
+        onPressed: () async {
+          if (!_isRecording) {
+            setState(() {
+              _isRecording = true;
+            });
+            final tmpPath = await getTemporaryDirectory();
+            final path = Directory('${tmpPath.path}/quiz_recordings');
+            await path.create();
+            final file =
+                File('${path.path}/${_questionNumber+1}.mp3');
+            file.writeAsStringSync('123');
+            await _audioRecorder.startRecorder(toFile: file.path);
+          }
+        },
+      ),
+    );
+  }
+
+  // Note: Recompile with -Xlint:deprecation for details.
+  Widget _stopRecordingAudioButton() {
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          minimumSize: Size(50.0, 50.0),
+          primary: _isRecording ? Colors.red : Colors.grey,
+        ),
+        child: Icon(Icons.stop, color: Colors.black),
+        onPressed: () async {
+          if (_isRecording) {
+            setState(() {
+              _isRecording = false;
+            });
+            await _audioRecorder.stopRecorder();
+          }
+        },
       ),
     );
   }
@@ -195,8 +263,10 @@ class _QuizState extends State<Quiz> {
                     ),
                     side: BorderSide(color: Colors.white54, width: 3.0),
                   ),
-                  onPressed: () {
-                    _assetsAudioPlayer.stop();
+                  onPressed: () async {
+                    await _audioPlayer.closeAudioSession();
+                    await _audioPlayer.stopPlayer();
+
                     if (_choices[_questionNumber] == '') {
                       setState(() {
                         _noOfQuestionsFilled++;

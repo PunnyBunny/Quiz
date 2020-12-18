@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'src/info_form.dart';
 import 'src/quiz_home.dart';
@@ -14,6 +15,8 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    Permission.microphone.request();
+    Permission.storage.request();
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: '測試',

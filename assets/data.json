@@ -1,6 +1,7 @@
 [
   {
     "title": "字詞關聯",
+    "type": "mc",
     "length": 28,
     "choices": [
       [
@@ -266,6 +267,7 @@
   },
   {
     "title": "句子填充",
+    "type": "mc",
     "length": 15,
     "choices": [
       [
@@ -414,6 +416,7 @@
   },
   {
     "title": "看圖選擇",
+    "type": "mc",
     "length": 8,
     "choices": [
       [
@@ -505,5 +508,13 @@
       "7.png",
       "8.png"
     ]
+  },
+  {
+    "title": "test",
+    "type": "audio",
+    "questions": [
+      "test"
+    ],
+    "length": 1
   }
 ]
