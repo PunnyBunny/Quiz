@@ -9,19 +9,39 @@ part 'quiz.g.dart';
 
 var quizzes = List<Quiz>();
 
+enum QuizType {
+  @JsonValue("audio")
+  AUDIO,
+  @JsonValue("mc")
+  MULTIPLE_CHOICE,
+}
+
 @JsonSerializable()
 class Quiz extends StatefulWidget {
-  Quiz(this.title, this.length, this.choices, this.questions,
+  Quiz(this.title, this.type, this.length, this.choices, this.questions,
       this.correctAnswers, this.audios, this.images);
 
   factory Quiz.fromJson(Map<String, dynamic> json) => _$QuizFromJson(json);
 
   Map<String, dynamic> toJson() => _$QuizToJson(this);
 
+  @JsonKey(required: true)
   final String title;
-  final List<String> questions, correctAnswers, audios, images;
-  final List<List<String>> choices;
+
+  @JsonKey(required: true)
+  final QuizType type;
+
+  @JsonKey(required: true)
+  final List<String> questions;
+
+  @JsonKey(required: true)
   final int length;
+
+  // properties that only exists in quizzes with type MC:
+  final List<String> correctAnswers;
+  final List<String> audios;
+  final List<String> images;
+  final List<List<String>> choices;
 
   @override
   State<StatefulWidget> createState() => _QuizState();
@@ -120,7 +140,7 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget _audioButton() {
-    return widget.audios == null
+    return widget.type == QuizType.AUDIO
         ? Container()
         : Padding(
             padding: EdgeInsets.all(2.0),
@@ -158,40 +178,42 @@ class _QuizState extends State<Quiz> {
   }
 
   List<Widget> _choiceButtons() {
-    return widget.choices[_questionNumber]
-        .map(
-          (choice) => Padding(
-            padding: EdgeInsets.zero,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: choice == _choices[_questionNumber]
-                    ? Colors.purple
-                    : Colors.lightBlue,
-                minimumSize: const Size(350.0, 35.0),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
+    return widget.type == QuizType.AUDIO
+        ? []
+        : widget.choices[_questionNumber]
+            .map(
+              (choice) => Padding(
+                padding: EdgeInsets.zero,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: choice == _choices[_questionNumber]
+                        ? Colors.purple
+                        : Colors.lightBlue,
+                    minimumSize: const Size(350.0, 35.0),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                    ),
+                    side: BorderSide(color: Colors.white54, width: 3.0),
+                  ),
+                  onPressed: () {
+                    _assetsAudioPlayer.stop();
+                    if (_choices[_questionNumber] == '') {
+                      setState(() {
+                        _noOfQuestionsFilled++;
+                      });
+                    }
+                    setState(() {
+                      _choices[_questionNumber] = choice;
+                    });
+                  },
+                  child: Text(
+                    choice,
+                    style: TextStyle(fontSize: 20.0, color: Colors.white),
+                  ),
                 ),
-                side: BorderSide(color: Colors.white54, width: 3.0),
               ),
-              onPressed: () {
-                _assetsAudioPlayer.stop();
-                if (_choices[_questionNumber] == '') {
-                  setState(() {
-                    _noOfQuestionsFilled++;
-                  });
-                }
-                setState(() {
-                  _choices[_questionNumber] = choice;
-                });
-              },
-              child: Text(
-                choice,
-                style: TextStyle(fontSize: 20.0, color: Colors.white),
-              ),
-            ),
-          ),
-        )
-        .toList(); // choices
+            )
+            .toList(); // choices
   }
 
   Widget _prevQuestionButton() {
