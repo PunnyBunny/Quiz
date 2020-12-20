@@ -288,11 +288,11 @@ class _QuizState extends State<Quiz> {
               final file = File(await _getPath());
               await _audioPlayer.startPlayer(fromURI: file.uri.toString());
               await _audioPlayer
-                  .setSubscriptionDuration(Duration(milliseconds: 100));
+                  .setSubscriptionDuration(Duration(milliseconds: 50));
               _playerSubscription =
                   _audioPlayer.onProgress.listen((event) async {
                 if (event.duration - event.position <=
-                    Duration(milliseconds: 50)) await _stopPlayer();
+                    Duration(milliseconds: 100)) await _stopPlayer();
               });
             }
           },
