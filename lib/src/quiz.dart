@@ -353,7 +353,7 @@ class _QuizState extends State<Quiz> {
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _audioTimer(),
             _stopUserAudioButton(),
