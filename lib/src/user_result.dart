@@ -1,11 +1,26 @@
-class UserResult {
-  final String name;
-  final DateTime dateOfBirth;
-  final String gender;
-  final int score;
-  final String testName;
-  final int testFullScore;
+import 'package:flutter/cupertino.dart';
 
-  UserResult(this.name, this.dateOfBirth, this.gender, this.score,
-      this.testName, this.testFullScore);
+class UserResult {
+  @required
+  final String name;
+
+  @required
+  final DateTime dateOfBirth;
+
+  @required
+  final String gender;
+
+  @required
+  final String testName;
+
+  final int score;
+  final int testLength;
+
+  UserResult(
+      {this.name,
+      this.dateOfBirth,
+      this.gender,
+      this.testName,
+      this.score,
+      this.testLength});
 }

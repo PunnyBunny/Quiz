@@ -1,24 +1,17 @@
 import 'dart:async';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:json_annotation/json_annotation.dart';
-import 'package:path_provider/path_provider.dart';
 
+import 'globals.dart' as globals;
+import 'quiz_type.dart';
 import 'user_info.dart';
 import 'user_result.dart';
 
 part 'quiz.g.dart';
 
 var quizzes = List<Quiz>();
-
-enum QuizType {
-  @JsonValue("audio")
-  AUDIO,
-  @JsonValue("mc")
-  MULTIPLE_CHOICE,
-}
 
 @JsonSerializable()
 class Quiz extends StatefulWidget {
@@ -59,24 +52,28 @@ class _QuizState extends State<Quiz> {
   StreamSubscription<PlaybackDisposition> _playerSubscription;
 
   bool _isUsingAudioService = false;
-  bool _recorded = false;
 
   int _questionNumber = 0;
-  List<String> _choices;
+  List<String> _userInputs;
   int _noOfQuestionsFilled = 0;
   FlutterSoundPlayer _audioPlayer;
   FlutterSoundRecorder _audioRecorder;
 
-  void init() async {
+  void _init() async {
     _audioPlayer = await FlutterSoundPlayer().openAudioSession();
+    await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 50));
     _audioRecorder = await FlutterSoundRecorder().openAudioSession();
+
+    final dir = await globals.userAudiosPath();
+    await dir.delete(recursive: true);
+    await dir.create();
   }
 
   @override
   void initState() {
     super.initState();
-    _choices = List<String>.filled(widget.length, '', growable: true);
-    init();
+    _userInputs = List<String>.filled(widget.length, '', growable: true);
+    Future.delayed(Duration.zero, _init);
   }
 
   @override
@@ -242,62 +239,22 @@ class _QuizState extends State<Quiz> {
       return Text('$minute:$seconds');
     }
 
-    Future<String> _getPath() async {
-      final tmpPath = await getTemporaryDirectory();
-      final path = Directory('${tmpPath.path}/quiz_recordings');
-      await path.create();
-      return '${path.path}/${_questionNumber + 1}.aac';
-    }
-
     Future<void> _stopPlayer() async {
+      if (_playerSubscription != null) await _playerSubscription.cancel();
       if (_timerSubscription != null) await _timerSubscription.cancel();
+
       _timerStream = null;
 
-      if (_playerSubscription != null) await _playerSubscription.cancel();
-
       setState(() {
+        if (_userInputs[_questionNumber].isEmpty) {
+          _userInputs[_questionNumber] = 'done';
+          ++_noOfQuestionsFilled;
+        }
         _isUsingAudioService = false;
       });
-      await _audioRecorder.stopRecorder();
+
       await _audioPlayer.stopPlayer();
-    }
-
-    Widget _playUserAudioButton() {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(200.0, 50.0),
-            primary:
-                _isUsingAudioService || !_recorded ? Colors.grey : Colors.blue,
-          ),
-          child: Text("播放已錄製的答案"),
-          onPressed: () async {
-            if (!_isUsingAudioService && _recorded) {
-              _timerStream = _stopwatchStream();
-              _timerSubscription = _timerStream.listen((seconds) {
-                setState(() {
-                  _timerSeconds = seconds;
-                });
-              });
-              setState(() {
-                _timerSeconds = 0;
-                _isUsingAudioService = true;
-              });
-
-              final file = File(await _getPath());
-              await _audioPlayer.startPlayer(fromURI: file.uri.toString());
-              await _audioPlayer
-                  .setSubscriptionDuration(Duration(milliseconds: 50));
-              _playerSubscription =
-                  _audioPlayer.onProgress.listen((event) async {
-                if (event.duration - event.position <=
-                    Duration(milliseconds: 100)) await _stopPlayer();
-              });
-            }
-          },
-        ),
-      );
+      await _audioRecorder.stopRecorder();
     }
 
     Widget _recordUserAudioButton() {
@@ -305,10 +262,12 @@ class _QuizState extends State<Quiz> {
         padding: const EdgeInsets.all(8.0),
         child: ElevatedButton(
           style: ElevatedButton.styleFrom(
-            minimumSize: Size(150.0, 50.0),
+            minimumSize: Size(200.0, 50.0),
             primary: _isUsingAudioService ? Colors.grey : Colors.blue,
           ),
-          child: Text("錄製答案"),
+          child: _userInputs[_questionNumber].isEmpty
+              ? Text("錄製答案")
+              : Text("重新錄製答案"),
           onPressed: () async {
             if (!_isUsingAudioService) {
               _timerStream = _stopwatchStream();
@@ -318,12 +277,50 @@ class _QuizState extends State<Quiz> {
                 });
               });
               setState(() {
-                _recorded = true;
                 _timerSeconds = 0;
                 _isUsingAudioService = true;
               });
-              final file = File(await _getPath());
+              final file = await globals.userAudioPath(_questionNumber);
               await _audioRecorder.startRecorder(toFile: file.path);
+            }
+          },
+        ),
+      );
+    }
+
+    Widget _playUserAudioButton() {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(200.0, 50.0),
+            primary:
+                _isUsingAudioService || _userInputs[_questionNumber].isEmpty
+                    ? Colors.grey
+                    : Colors.blue,
+          ),
+          child: Text("播放已錄製的答案"),
+          onPressed: () async {
+            if (!_isUsingAudioService &&
+                _userInputs[_questionNumber].isNotEmpty) {
+              _timerStream = _stopwatchStream();
+              _timerSubscription = _timerStream.listen((seconds) {
+                setState(() {
+                  _timerSeconds = seconds;
+                });
+              });
+              setState(() {
+                _timerSeconds = 0;
+                _isUsingAudioService = true;
+              });
+
+              final file = await globals.userAudioPath(_questionNumber);
+              await _audioPlayer.startPlayer(fromURI: file.uri.toString());
+              _playerSubscription =
+                  _audioPlayer.onProgress.listen((event) async {
+                if (event.duration - event.position <=
+                    Duration(milliseconds: 100)) await _stopPlayer();
+              });
             }
           },
         ),
@@ -379,7 +376,7 @@ class _QuizState extends State<Quiz> {
                 padding: EdgeInsets.zero,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    primary: choice == _choices[_questionNumber]
+                    primary: choice == _userInputs[_questionNumber]
                         ? Colors.purple
                         : Colors.lightBlue,
                     minimumSize: const Size(350.0, 35.0),
@@ -392,13 +389,13 @@ class _QuizState extends State<Quiz> {
                     await _audioPlayer.closeAudioSession();
                     await _audioPlayer.stopPlayer();
 
-                    if (_choices[_questionNumber] == '') {
+                    if (_userInputs[_questionNumber] == '') {
                       setState(() {
                         _noOfQuestionsFilled++;
                       });
                     }
                     setState(() {
-                      _choices[_questionNumber] = choice;
+                      _userInputs[_questionNumber] = choice;
                     });
                   },
                   child: Text(
@@ -439,24 +436,37 @@ class _QuizState extends State<Quiz> {
       child: Text('遞交'),
       onPressed: () {
         if (_noOfQuestionsFilled == widget.length) {
-          int score = 0;
-          for (int i = 0; i < widget.length; ++i) {
-            if (_choices[i] == widget.correctAnswers[i]) {
-              score++;
+          if (widget.type == QuizType.MULTIPLE_CHOICE) {
+            int score = 0;
+            for (int i = 0; i < widget.length; ++i) {
+              if (_userInputs[i] == widget.correctAnswers[i]) {
+                score++;
+              }
             }
+            Navigator.pushNamed(
+              context,
+              '/mc_summary',
+              arguments: UserResult(
+                name: currentUserInfo.name,
+                dateOfBirth: currentUserInfo.dateOfBirth,
+                gender: currentUserInfo.gender,
+                testName: widget.title,
+                score: score,
+                testLength: widget.length,
+              ),
+            );
+          } else {
+            Navigator.pushNamed(
+              context,
+              '/audio_summary',
+              arguments: UserResult(
+                name: currentUserInfo.name,
+                dateOfBirth: currentUserInfo.dateOfBirth,
+                gender: currentUserInfo.gender,
+                testName: widget.title,
+              ),
+            );
           }
-          Navigator.pushNamed(
-            context,
-            '/summary',
-            arguments: UserResult(
-              currentUserInfo.name,
-              currentUserInfo.dateOfBirth,
-              currentUserInfo.gender,
-              score,
-              widget.title,
-              widget.length,
-            ),
-          );
         } else {
           showDialog(
             context: context,

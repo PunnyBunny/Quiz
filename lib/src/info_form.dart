@@ -4,8 +4,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
+import 'globals.dart' as globals;
 import 'quiz.dart';
-import 'date_formatter.dart';
 import 'user_info.dart';
 
 class InformationForm extends StatefulWidget {
@@ -73,7 +73,7 @@ class _InformationFormState extends State<InformationForm> {
           minimumSize: Size(double.infinity, 50.0),
           primary: Colors.transparent,
         ),
-        child: Text('出生日期: ' + dateFormatter.format(_userDateOfBirth)),
+        child: Text('出生日期: ' + globals.dateFormatter.format(_userDateOfBirth)),
         onPressed: () async {
           final DateTime picked = await showDatePicker(
             context: context,
@@ -121,8 +121,9 @@ class _InformationFormState extends State<InformationForm> {
       onPressed: () async {
         setState(() {
           _userNameWarning = _userName.isEmpty;
-          _userDateOfBirthWarning = dateFormatter.format(_userDateOfBirth) ==
-              dateFormatter.format(DateTime.now());
+          _userDateOfBirthWarning =
+              globals.dateFormatter.format(_userDateOfBirth) ==
+                  globals.dateFormatter.format(DateTime.now());
           _userGenderWarning = _userGender.isEmpty;
         });
         if (!_userNameWarning &&

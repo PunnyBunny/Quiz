@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
+import 'src/audio_summary.dart';
 import 'src/info_form.dart';
+import 'src/mc_summary.dart';
 import 'src/quiz_home.dart';
-import 'src/summary.dart';
 
 void main() {
   runApp(MyApp());
@@ -42,7 +43,8 @@ class MyApp extends StatelessWidget {
       routes: {
         '/info_form': (context) => InformationForm(),
         '/': (context) => HomePage(),
-        '/summary': (context) => SummaryPage(),
+        '/mc_summary': (context) => McSummaryPage(),
+        '/audio_summary': (context) => AudioSummaryPage(),
       },
     );
   }

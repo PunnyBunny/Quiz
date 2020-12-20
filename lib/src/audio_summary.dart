@@ -1,38 +1,42 @@
-import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+import 'dart:io';
 
-import 'date_formatter.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_archive/flutter_archive.dart';
+import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
+
+import 'globals.dart' as globals;
 import 'user_result.dart';
 
-class SummaryPage extends StatefulWidget {
+class AudioSummaryPage extends StatefulWidget {
   @override
-  _SummaryPageState createState() => _SummaryPageState();
+  _AudioSummaryPageState createState() => _AudioSummaryPageState();
 }
 
-class _SummaryPageState extends State<SummaryPage> {
-  String finalScore = '';
-
+class _AudioSummaryPageState extends State<AudioSummaryPage> {
   @override
   void initState() {
     super.initState();
     Future.delayed(Duration.zero, () async {
       final UserResult result = ModalRoute.of(context).settings.arguments;
-      setState(() {
-        finalScore = '最終分數: ${result.score}/${result.testFullScore}';
-      });
-      final response = await http.post(
-        'http://testquiz.hopto.org:5000',
-        body: {
-          'action': 'add_new',
-          'name': result.name,
-          'date_of_birth': dateFormatter.format(result.dateOfBirth),
-          'gender': result.gender,
-          'score': '${result.score}',
-          'test_name': result.testName,
-          'test_full_score': '${result.testFullScore}',
-        },
-      );
+
+      final zipFile =
+          File((await getTemporaryDirectory()).path + '/audios.zip');
+      await zipFile.create();
+      await ZipFile.createFromDirectory(
+          sourceDir: await globals.userAudiosPath(), zipFile: zipFile);
+      var request = http.MultipartRequest('POST', Uri.parse(globals.SERVER_URI))
+        ..fields['action'] = 'add_new'
+        ..fields['name'] = result.name
+        ..fields['date_of_birth'] =
+            globals.dateFormatter.format(result.dateOfBirth)
+        ..fields['gender'] = '${result.score}'
+        ..fields['test_name'] = result.testName
+        ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
+
+      final response = await request.send();
       assert(response.statusCode == 200);
+      print('uploaded audios zip file');
     });
   }
 
@@ -45,11 +49,10 @@ class _SummaryPageState extends State<SummaryPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
-              Text(
-                finalScore,
-                style: TextStyle(fontSize: 40.0, color: Colors.white),
+              Padding(
+                padding: EdgeInsets.all(50.0),
+                child: Text("謝謝", style: Theme.of(context).textTheme.headline2),
               ),
-              Padding(padding: EdgeInsets.all(30.0)),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   primary: Colors.blue,
