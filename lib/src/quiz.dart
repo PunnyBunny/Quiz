@@ -55,6 +55,9 @@ class _QuizState extends State<Quiz> {
   Stream<int> _timerStream;
   StreamSubscription<int> _timerSubscription;
   int _timerSeconds = 0;
+
+  StreamSubscription<PlaybackDisposition> _playerSubscription;
+
   bool _isUsingAudioService = false;
   bool _recorded = false;
 
@@ -103,10 +106,26 @@ class _QuizState extends State<Quiz> {
               children: <Widget>[
                     _playAudioButton(),
                     _question(),
-                    _timer(),
-                    _startRecordingAudioButton(),
-                    _startPlayingAudioButton(),
-                    _stopRecordingAudioButton(),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.end,
+                          children: [
+                            _timer(),
+                            _stopRecordingAudioButton(),
+                          ],
+                        ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _startRecordingAudioButton(),
+                            _startPlayingAudioButton(),
+                          ],
+                        ),
+                      ],
+                    )
                   ] +
                   _choiceButtons() +
                   [
@@ -241,17 +260,38 @@ class _QuizState extends State<Quiz> {
     return Text('$minute:$seconds');
   }
 
+  Future<String> _getPath() async {
+    final tmpPath = await getTemporaryDirectory();
+    final path = Directory('${tmpPath.path}/quiz_recordings');
+    await path.create();
+    return '${path.path}/${_questionNumber + 1}.aac';
+  }
+
+  Future<void> _stopPlayer() async {
+    if (_timerSubscription != null) await _timerSubscription.cancel();
+    _timerStream = null;
+
+    if (_playerSubscription != null) await _playerSubscription.cancel();
+
+    setState(() {
+      _isUsingAudioService = false;
+    });
+    await _audioRecorder.stopRecorder();
+    await _audioPlayer.stopPlayer();
+  }
+
   Widget _startPlayingAudioButton() {
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           minimumSize: Size(200.0, 50.0),
-          primary: _isUsingAudioService || _isUsingAudioService ? Colors.grey : Colors.blue,
+          primary:
+              _isUsingAudioService || !_recorded ? Colors.grey : Colors.blue,
         ),
         child: Text("播放已錄製的答案"),
         onPressed: () async {
-          if (!_isUsingAudioService && !_isUsingAudioService) {
+          if (!_isUsingAudioService && _recorded) {
             _timerStream = _stopwatchStream();
             _timerSubscription = _timerStream.listen((seconds) {
               setState(() {
@@ -262,12 +302,15 @@ class _QuizState extends State<Quiz> {
               _timerSeconds = 0;
               _isUsingAudioService = true;
             });
-            final tmpPath = await getTemporaryDirectory();
-            final path = Directory('${tmpPath.path}/quiz_recordings');
-            await path.create();
-            print(path.path);
-            final file = File('${path.path}/${_questionNumber + 1}.mp3');
+
+            final file = File(await _getPath());
             await _audioPlayer.startPlayer(fromURI: file.uri.toString());
+            await _audioPlayer
+                .setSubscriptionDuration(Duration(milliseconds: 100));
+            _playerSubscription = _audioPlayer.onProgress.listen((event) async {
+              if (event.duration - event.position <= Duration(milliseconds: 50))
+                await _stopPlayer();
+            });
           }
         },
       ),
@@ -280,11 +323,11 @@ class _QuizState extends State<Quiz> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           minimumSize: Size(150.0, 50.0),
-          primary: _isUsingAudioService || _isUsingAudioService ? Colors.grey : Colors.blue,
+          primary: _isUsingAudioService ? Colors.grey : Colors.blue,
         ),
         child: Text("錄製答案"),
         onPressed: () async {
-          if (!_isUsingAudioService && !_isUsingAudioService) {
+          if (!_isUsingAudioService) {
             _timerStream = _stopwatchStream();
             _timerSubscription = _timerStream.listen((seconds) {
               setState(() {
@@ -292,13 +335,11 @@ class _QuizState extends State<Quiz> {
               });
             });
             setState(() {
+              _recorded = true;
               _timerSeconds = 0;
               _isUsingAudioService = true;
             });
-            final tmpPath = await getTemporaryDirectory();
-            final path = Directory('${tmpPath.path}/quiz_recordings');
-            await path.create();
-            final file = File('${path.path}/${_questionNumber + 1}.mp3');
+            final file = File(await _getPath());
             await _audioRecorder.startRecorder(toFile: file.path);
           }
         },
@@ -312,19 +353,12 @@ class _QuizState extends State<Quiz> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           minimumSize: Size(50.0, 50.0),
-          primary: _isUsingAudioService || _isUsingAudioService ? Colors.red : Colors.grey,
+          primary: _isUsingAudioService ? Colors.red : Colors.grey,
         ),
         child: Icon(Icons.stop, color: Colors.black),
         onPressed: () async {
-          if (_isUsingAudioService || _isUsingAudioService) {
-            _timerSubscription.cancel();
-            _timerStream = null;
-            setState(() {
-              _isUsingAudioService = false;
-              _isUsingAudioService = false;
-            });
-            await _audioRecorder.stopRecorder();
-            await _audioPlayer.stopPlayer();
+          if (_isUsingAudioService) {
+            await _stopPlayer();
           }
         },
       ),
