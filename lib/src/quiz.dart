@@ -104,28 +104,9 @@ class _QuizState extends State<Quiz> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                    _playAudioButton(),
+                    _playSystemAudioButton(),
                     _question(),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            _timer(),
-                            _stopRecordingAudioButton(),
-                          ],
-                        ),
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            _startRecordingAudioButton(),
-                            _startPlayingAudioButton(),
-                          ],
-                        ),
-                      ],
-                    )
+                    _userAudio(),
                   ] +
                   _choiceButtons() +
                   [
@@ -188,7 +169,7 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget _playAudioButton() {
+  Widget _playSystemAudioButton() {
     return widget.type == QuizType.AUDIO
         ? Container()
         : Padding(
@@ -224,144 +205,168 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Stream<int> _stopwatchStream() {
-    StreamController<int> controller;
-    Timer timer;
-    final interval = Duration(seconds: 1);
-    int counter = 0;
+  Widget _userAudio() {
+    Stream<int> _stopwatchStream() {
+      StreamController<int> controller;
+      Timer timer;
+      final interval = Duration(seconds: 1);
+      int counter = 0;
 
-    void tick(_) {
-      ++counter;
-      controller.add(counter);
-    }
-
-    void stopTimer() {
-      if (timer != null) {
-        timer.cancel();
-        timer = null;
-        counter = 0;
-        controller.close();
+      void tick(_) {
+        ++counter;
+        controller.add(counter);
       }
+
+      void stopTimer() {
+        if (timer != null) {
+          timer.cancel();
+          timer = null;
+          counter = 0;
+          controller.close();
+        }
+      }
+
+      void startTimer() {
+        timer = Timer.periodic(interval, tick);
+      }
+
+      controller =
+          StreamController<int>(onListen: startTimer, onCancel: stopTimer);
+
+      return controller.stream;
     }
 
-    void startTimer() {
-      timer = Timer.periodic(interval, tick);
+    Widget _audioTimer() {
+      String minute = '${_timerSeconds ~/ 60}'.padLeft(2, '0'),
+          seconds = '${_timerSeconds % 60}'.padLeft(2, '0');
+      return Text('$minute:$seconds');
     }
 
-    controller =
-        StreamController<int>(onListen: startTimer, onCancel: stopTimer);
+    Future<String> _getPath() async {
+      final tmpPath = await getTemporaryDirectory();
+      final path = Directory('${tmpPath.path}/quiz_recordings');
+      await path.create();
+      return '${path.path}/${_questionNumber + 1}.aac';
+    }
 
-    return controller.stream;
-  }
+    Future<void> _stopPlayer() async {
+      if (_timerSubscription != null) await _timerSubscription.cancel();
+      _timerStream = null;
 
-  Widget _timer() {
-    String minute = '${_timerSeconds ~/ 60}'.padLeft(2, '0'),
-        seconds = '${_timerSeconds % 60}'.padLeft(2, '0');
-    return Text('$minute:$seconds');
-  }
+      if (_playerSubscription != null) await _playerSubscription.cancel();
 
-  Future<String> _getPath() async {
-    final tmpPath = await getTemporaryDirectory();
-    final path = Directory('${tmpPath.path}/quiz_recordings');
-    await path.create();
-    return '${path.path}/${_questionNumber + 1}.aac';
-  }
+      setState(() {
+        _isUsingAudioService = false;
+      });
+      await _audioRecorder.stopRecorder();
+      await _audioPlayer.stopPlayer();
+    }
 
-  Future<void> _stopPlayer() async {
-    if (_timerSubscription != null) await _timerSubscription.cancel();
-    _timerStream = null;
-
-    if (_playerSubscription != null) await _playerSubscription.cancel();
-
-    setState(() {
-      _isUsingAudioService = false;
-    });
-    await _audioRecorder.stopRecorder();
-    await _audioPlayer.stopPlayer();
-  }
-
-  Widget _startPlayingAudioButton() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          minimumSize: Size(200.0, 50.0),
-          primary:
-              _isUsingAudioService || !_recorded ? Colors.grey : Colors.blue,
-        ),
-        child: Text("播放已錄製的答案"),
-        onPressed: () async {
-          if (!_isUsingAudioService && _recorded) {
-            _timerStream = _stopwatchStream();
-            _timerSubscription = _timerStream.listen((seconds) {
-              setState(() {
-                _timerSeconds = seconds;
+    Widget _playUserAudioButton() {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(200.0, 50.0),
+            primary:
+                _isUsingAudioService || !_recorded ? Colors.grey : Colors.blue,
+          ),
+          child: Text("播放已錄製的答案"),
+          onPressed: () async {
+            if (!_isUsingAudioService && _recorded) {
+              _timerStream = _stopwatchStream();
+              _timerSubscription = _timerStream.listen((seconds) {
+                setState(() {
+                  _timerSeconds = seconds;
+                });
               });
-            });
-            setState(() {
-              _timerSeconds = 0;
-              _isUsingAudioService = true;
-            });
-
-            final file = File(await _getPath());
-            await _audioPlayer.startPlayer(fromURI: file.uri.toString());
-            await _audioPlayer
-                .setSubscriptionDuration(Duration(milliseconds: 100));
-            _playerSubscription = _audioPlayer.onProgress.listen((event) async {
-              if (event.duration - event.position <= Duration(milliseconds: 50))
-                await _stopPlayer();
-            });
-          }
-        },
-      ),
-    );
-  }
-
-  Widget _startRecordingAudioButton() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          minimumSize: Size(150.0, 50.0),
-          primary: _isUsingAudioService ? Colors.grey : Colors.blue,
-        ),
-        child: Text("錄製答案"),
-        onPressed: () async {
-          if (!_isUsingAudioService) {
-            _timerStream = _stopwatchStream();
-            _timerSubscription = _timerStream.listen((seconds) {
               setState(() {
-                _timerSeconds = seconds;
+                _timerSeconds = 0;
+                _isUsingAudioService = true;
               });
-            });
-            setState(() {
-              _recorded = true;
-              _timerSeconds = 0;
-              _isUsingAudioService = true;
-            });
-            final file = File(await _getPath());
-            await _audioRecorder.startRecorder(toFile: file.path);
-          }
-        },
-      ),
-    );
-  }
 
-  Widget _stopRecordingAudioButton() {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          minimumSize: Size(50.0, 50.0),
-          primary: _isUsingAudioService ? Colors.red : Colors.grey,
+              final file = File(await _getPath());
+              await _audioPlayer.startPlayer(fromURI: file.uri.toString());
+              await _audioPlayer
+                  .setSubscriptionDuration(Duration(milliseconds: 100));
+              _playerSubscription =
+                  _audioPlayer.onProgress.listen((event) async {
+                if (event.duration - event.position <=
+                    Duration(milliseconds: 50)) await _stopPlayer();
+              });
+            }
+          },
         ),
-        child: Icon(Icons.stop, color: Colors.black),
-        onPressed: () async {
-          if (_isUsingAudioService) {
-            await _stopPlayer();
-          }
-        },
-      ),
+      );
+    }
+
+    Widget _recordUserAudioButton() {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(150.0, 50.0),
+            primary: _isUsingAudioService ? Colors.grey : Colors.blue,
+          ),
+          child: Text("錄製答案"),
+          onPressed: () async {
+            if (!_isUsingAudioService) {
+              _timerStream = _stopwatchStream();
+              _timerSubscription = _timerStream.listen((seconds) {
+                setState(() {
+                  _timerSeconds = seconds;
+                });
+              });
+              setState(() {
+                _recorded = true;
+                _timerSeconds = 0;
+                _isUsingAudioService = true;
+              });
+              final file = File(await _getPath());
+              await _audioRecorder.startRecorder(toFile: file.path);
+            }
+          },
+        ),
+      );
+    }
+
+    Widget _stopUserAudioButton() {
+      return Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: ElevatedButton(
+          style: ElevatedButton.styleFrom(
+            minimumSize: Size(50.0, 50.0),
+            primary: _isUsingAudioService ? Colors.red : Colors.grey,
+          ),
+          child: Icon(Icons.stop, color: Colors.black),
+          onPressed: () async {
+            if (_isUsingAudioService) {
+              await _stopPlayer();
+            }
+          },
+        ),
+      );
+    }
+
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            _audioTimer(),
+            _stopUserAudioButton(),
+          ],
+        ),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _recordUserAudioButton(),
+            _playUserAudioButton(),
+          ],
+        ),
+      ],
     );
   }
 
