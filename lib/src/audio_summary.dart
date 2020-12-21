@@ -27,9 +27,10 @@ class _AudioSummaryPageState extends State<AudioSummaryPage> {
           sourceDir: await globals.userAudiosPath(), zipFile: zipFile);
       var request = http.MultipartRequest('POST', Uri.parse(globals.SERVER_URI))
         ..fields['action'] = 'add_new'
+        ..fields['type'] = 'audio'
         ..fields['name'] = result.name
         ..fields['date_of_birth'] =
-            globals.dateFormatter.format(result.dateOfBirth)
+            globals.DATE_FORMATTER.format(result.dateOfBirth)
         ..fields['gender'] = '${result.score}'
         ..fields['test_name'] = result.testName
         ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
