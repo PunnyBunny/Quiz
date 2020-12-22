@@ -7,18 +7,25 @@ part of 'quiz.dart';
 // **************************************************************************
 
 Quiz _$QuizFromJson(Map<String, dynamic> json) {
-  $checkKeys(json,
-      requiredKeys: const ['title', 'type', 'questions', 'length']);
+  $checkKeys(json, requiredKeys: const [
+    'title',
+    'type',
+    'length',
+    'goal',
+    'audios',
+    'questions'
+  ]);
   return Quiz(
     json['title'] as String,
-    _$enumDecodeNullable(_$QuizTypeEnumMap, json['type']),
+    _$enumDecode(_$QuizTypeEnumMap, json['type']),
     json['length'] as int,
+    json['goal'] as String,
+    (json['questions'] as List)?.map((e) => e as String)?.toList(),
+    (json['audios'] as List).map((e) => e as String).toList(),
     (json['choices'] as List)
         ?.map((e) => (e as List)?.map((e) => e as String)?.toList())
         ?.toList(),
-    (json['questions'] as List)?.map((e) => e as String)?.toList(),
     (json['correctAnswers'] as List)?.map((e) => e as String)?.toList(),
-    (json['audios'] as List)?.map((e) => e as String)?.toList(),
     (json['images'] as List)?.map((e) => e as String)?.toList(),
   );
 }
@@ -26,12 +33,13 @@ Quiz _$QuizFromJson(Map<String, dynamic> json) {
 Map<String, dynamic> _$QuizToJson(Quiz instance) => <String, dynamic>{
       'title': instance.title,
       'type': _$QuizTypeEnumMap[instance.type],
-      'questions': instance.questions,
       'length': instance.length,
-      'correctAnswers': instance.correctAnswers,
+      'goal': instance.goal,
       'audios': instance.audios,
-      'images': instance.images,
+      'questions': instance.questions,
       'choices': instance.choices,
+      'correctAnswers': instance.correctAnswers,
+      'images': instance.images,
     };
 
 T _$enumDecode<T>(
@@ -53,17 +61,6 @@ T _$enumDecode<T>(
         '${enumValues.values.join(', ')}');
   }
   return value ?? unknownValue;
-}
-
-T _$enumDecodeNullable<T>(
-  Map<T, dynamic> enumValues,
-  dynamic source, {
-  T unknownValue,
-}) {
-  if (source == null) {
-    return null;
-  }
-  return _$enumDecode<T>(enumValues, source, unknownValue: unknownValue);
 }
 
 const _$QuizTypeEnumMap = {
