@@ -15,30 +15,35 @@ var quizzes = List<Quiz>();
 
 @JsonSerializable()
 class Quiz extends StatefulWidget {
-  Quiz(this.title, this.type, this.length, this.choices, this.questions,
-      this.correctAnswers, this.audios, this.images);
+  Quiz(this.title, this.type, this.length, this.goal, this.questions,
+      this.audios, this.choices, this.correctAnswers, this.images);
 
   factory Quiz.fromJson(Map<String, dynamic> json) => _$QuizFromJson(json);
 
   Map<String, dynamic> toJson() => _$QuizToJson(this);
 
-  @JsonKey(required: true)
+  @JsonKey(required: true, nullable: false)
   final String title;
 
-  @JsonKey(required: true)
+  @JsonKey(required: true, nullable: false)
   final QuizType type;
+
+  @JsonKey(required: true, nullable: false)
+  final int length;
+
+  @JsonKey(required: true, nullable: false)
+  final String goal;
+
+  @JsonKey(required: true, nullable: false)
+  final List<String> audios;
 
   @JsonKey(required: true)
   final List<String> questions;
 
-  @JsonKey(required: true)
-  final int length;
-
   // properties that only exists in quizzes with type MC:
-  final List<String> correctAnswers;
-  final List<String> audios;
-  final List<String> images;
   final List<List<String>> choices;
+  final List<String> correctAnswers;
+  final List<String> images;
 
   @override
   State<StatefulWidget> createState() => _QuizState();
@@ -61,12 +66,12 @@ class _QuizState extends State<Quiz> {
 
   void _init() async {
     _audioPlayer = await FlutterSoundPlayer().openAudioSession();
-    await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 50));
+    await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 20));
     _audioRecorder = await FlutterSoundRecorder().openAudioSession();
 
     final dir = await globals.userAudiosPath();
     await dir.delete(recursive: true);
-    await dir.create();
+    await dir.create(recursive: true);
   }
 
   @override
@@ -102,6 +107,7 @@ class _QuizState extends State<Quiz> {
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                     _playSystemAudioButton(),
+                    _goal(),
                     _question(),
                     _userAudio(),
                   ] +
@@ -179,7 +185,7 @@ class _QuizState extends State<Quiz> {
                 minimumSize: Size(150.0, 25.0),
                 primary: Colors.lightBlue,
               ),
-              child: Text('播放聲音'),
+              child: Text('播放問題'),
               onPressed: () {
                 _audioPlayer.openAudioSession().then((player) async {
                   await player.startPlayer(
@@ -191,15 +197,28 @@ class _QuizState extends State<Quiz> {
           );
   }
 
-  Widget _question() {
+  Widget _goal() {
     return Padding(
       padding: EdgeInsets.all(10.0),
       child: Text(
-        widget.questions[_questionNumber],
-        style: Theme.of(context).textTheme.headline4,
+        widget.goal,
+        style: Theme.of(context).textTheme.headline3,
         textAlign: TextAlign.center,
       ),
     );
+  }
+
+  Widget _question() {
+    return widget.questions == null
+        ? Container()
+        : Padding(
+            padding: EdgeInsets.all(10.0),
+            child: Text(
+              widget.questions[_questionNumber],
+              style: Theme.of(context).textTheme.headline4,
+              textAlign: TextAlign.center,
+            ),
+          );
   }
 
   Widget _userAudio() {
@@ -215,12 +234,10 @@ class _QuizState extends State<Quiz> {
       }
 
       void stopTimer() {
-        if (timer != null) {
-          timer.cancel();
-          timer = null;
-          counter = 0;
-          controller.close();
-        }
+        timer?.cancel();
+        timer = null;
+        counter = 0;
+        controller.close();
       }
 
       void startTimer() {
@@ -240,8 +257,8 @@ class _QuizState extends State<Quiz> {
     }
 
     Future<void> _stopPlayer() async {
-      if (_playerSubscription != null) await _playerSubscription.cancel();
-      if (_timerSubscription != null) await _timerSubscription.cancel();
+      _playerSubscription?.cancel();
+      _timerSubscription?.cancel();
 
       _timerStream = null;
 
@@ -315,12 +332,13 @@ class _QuizState extends State<Quiz> {
               });
 
               final file = await globals.userAudioPath(_questionNumber);
-              await _audioPlayer.startPlayer(fromURI: file.uri.toString());
               _playerSubscription =
                   _audioPlayer.onProgress.listen((event) async {
+                print(event.position);
                 if (event.duration - event.position <=
-                    Duration(milliseconds: 100)) await _stopPlayer();
+                    Duration(milliseconds: 200)) await _stopPlayer();
               });
+              await _audioPlayer.startPlayer(fromURI: file.uri.toString());
             }
           },
         ),
@@ -411,7 +429,9 @@ class _QuizState extends State<Quiz> {
   Widget _prevQuestionButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-          primary: _questionNumber == 0 ? Colors.blueGrey : Colors.lightBlue,
+          primary: _questionNumber == 0 || _isUsingAudioService
+              ? Colors.blueGrey
+              : Colors.lightBlue,
           shape: CircleBorder(),
           minimumSize: Size(50.0, 50.0)),
       child: Icon(Icons.arrow_back_rounded, color: Colors.white, size: 50),
@@ -427,7 +447,7 @@ class _QuizState extends State<Quiz> {
   Widget _submitButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        primary: _noOfQuestionsFilled == widget.length
+        primary: _noOfQuestionsFilled == widget.length && !_isUsingAudioService
             ? Colors.green
             : Colors.blueGrey,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -498,7 +518,7 @@ class _QuizState extends State<Quiz> {
   Widget _nextQuestionButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-          primary: _questionNumber == widget.length - 1
+          primary: _questionNumber == widget.length - 1 || _isUsingAudioService
               ? Colors.blueGrey
               : Colors.lightBlue,
           shape: CircleBorder(),
@@ -524,3 +544,4 @@ class _QuizState extends State<Quiz> {
           );
   }
 }
+// TODO: add back A_008.wav and E_009.wav
