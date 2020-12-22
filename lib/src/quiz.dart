@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 import 'package:json_annotation/json_annotation.dart';
 
-import 'globals.dart' as globals;
+import 'globals.dart';
 import 'quiz_type.dart';
 import 'user_info.dart';
 import 'user_result.dart';
@@ -69,7 +69,7 @@ class _QuizState extends State<Quiz> {
     await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 20));
     _audioRecorder = await FlutterSoundRecorder().openAudioSession();
 
-    final dir = await globals.userAudiosPath();
+    final dir = await Globals.userAudiosPath();
     await dir.delete(recursive: true);
     await dir.create(recursive: true);
   }
@@ -297,7 +297,7 @@ class _QuizState extends State<Quiz> {
                 _timerSeconds = 0;
                 _isUsingAudioService = true;
               });
-              final file = await globals.userAudioPath(_questionNumber);
+              final file = await Globals.userAudioPath(_questionNumber);
               await _audioRecorder.startRecorder(toFile: file.path);
             }
           },
@@ -331,7 +331,7 @@ class _QuizState extends State<Quiz> {
                 _isUsingAudioService = true;
               });
 
-              final file = await globals.userAudioPath(_questionNumber);
+              final file = await Globals.userAudioPath(_questionNumber);
               _playerSubscription =
                   _audioPlayer.onProgress.listen((event) async {
                 print(event.position);

@@ -5,7 +5,7 @@ import 'package:flutter_archive/flutter_archive.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
-import 'globals.dart' as globals;
+import 'globals.dart';
 import 'user_result.dart';
 
 class AudioSummaryPage extends StatefulWidget {
@@ -24,13 +24,13 @@ class _AudioSummaryPageState extends State<AudioSummaryPage> {
           File((await getTemporaryDirectory()).path + '/audios.zip');
       await zipFile.create();
       await ZipFile.createFromDirectory(
-          sourceDir: await globals.userAudiosPath(), zipFile: zipFile);
-      var request = http.MultipartRequest('POST', Uri.parse(globals.SERVER_URI))
+          sourceDir: await Globals.userAudiosPath(), zipFile: zipFile);
+      var request = http.MultipartRequest('POST', Uri.parse(Globals.SERVER_URI))
         ..fields['action'] = 'add_new'
         ..fields['type'] = 'audio'
         ..fields['name'] = result.name
         ..fields['date_of_birth'] =
-            globals.DATE_FORMATTER.format(result.dateOfBirth)
+            Globals.dateFormatter.format(result.dateOfBirth)
         ..fields['gender'] = '${result.score}'
         ..fields['test_name'] = result.testName
         ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
