@@ -22,8 +22,6 @@ class _InformationFormState extends State<InformationForm> {
   bool _userDateOfBirthWarning = false;
   bool _userGenderWarning = false;
 
-  bool _loadedJson = false;
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -73,7 +71,7 @@ class _InformationFormState extends State<InformationForm> {
           minimumSize: Size(double.infinity, 50.0),
           primary: Colors.transparent,
         ),
-        child: Text('出生日期: ' + globals.dateFormatter.format(_userDateOfBirth)),
+        child: Text('出生日期: ' + globals.DATE_FORMATTER.format(_userDateOfBirth)),
         onPressed: () async {
           final DateTime picked = await showDatePicker(
             context: context,
@@ -122,8 +120,8 @@ class _InformationFormState extends State<InformationForm> {
         setState(() {
           _userNameWarning = _userName.isEmpty;
           _userDateOfBirthWarning =
-              globals.dateFormatter.format(_userDateOfBirth) ==
-                  globals.dateFormatter.format(DateTime.now());
+              globals.DATE_FORMATTER.format(_userDateOfBirth) ==
+                  globals.DATE_FORMATTER.format(DateTime.now());
           _userGenderWarning = _userGender.isEmpty;
         });
         if (!_userNameWarning &&
@@ -131,40 +129,72 @@ class _InformationFormState extends State<InformationForm> {
             !_userGenderWarning) {
           // all information is correctly filed
           currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
-
-          if (!_loadedJson) {
-            String json = await rootBundle.loadString('assets/data.json');
-            List<dynamic> loaded = jsonDecode(json);
-            loaded.forEach((data) {
-              quizzes.add(Quiz.fromJson(data));
-            });
-            _loadedJson = true;
-          }
-          Navigator.pushNamed(context, '/');
+          _confirm();
         } else {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                content: Text(
-                  '${_userNameWarning ? '請填寫姓名\n' : ''}'
-                  '${_userDateOfBirthWarning ? '請填寫出生日期\n' : ''}'
-                  '${_userGenderWarning ? '請填寫性別\n' : ''}',
-                  style: Theme.of(context).textTheme.headline1,
-                ),
-                actions: [
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context);
-                    },
-                    child: Text('好'),
-                  )
-                ],
-              );
-            },
-          );
+          _alert();
         }
       },
     );
+  }
+
+  void _alert() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(
+            '${_userNameWarning ? '請填寫姓名\n' : ''}'
+            '${_userDateOfBirthWarning ? '請填寫出生日期\n' : ''}'
+            '${_userGenderWarning ? '請填寫性別\n' : ''}',
+            style: Theme.of(context).textTheme.headline1,
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('好'),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  void _confirm() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          content: Text(
+            '確定?',
+            style: Theme.of(context).textTheme.headline1,
+          ),
+          actions: [
+            ElevatedButton(
+              onPressed: () async {
+                await _loadJson();
+                Navigator.popAndPushNamed(context, '/');
+              },
+              child: Text('好'),
+            ),
+            ElevatedButton(
+              onPressed: () {
+                Navigator.pop(context);
+              },
+              child: Text('返回'),
+            )
+          ],
+        );
+      },
+    );
+  }
+
+  Future<void> _loadJson() async {
+    String json = await rootBundle.loadString('assets/data.json');
+    List<dynamic> loaded = jsonDecode(json);
+    loaded.forEach((data) {
+      quizzes.add(Quiz.fromJson(data));
+    });
   }
 }
