@@ -12,12 +12,21 @@ void main() {
 }
 
 class MyApp extends StatelessWidget {
-  // This widget is the root of your application.
+  void _init() async {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    var statuses = await [
+      Permission.microphone,
+      Permission.storage,
+    ].request();
+    statuses.forEach((key, value) {
+      assert(value.isGranted);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    Permission.microphone.request();
-    Permission.storage.request();
+    Future.delayed(Duration.zero, _init);
+
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: '測試',
@@ -49,3 +58,5 @@ class MyApp extends StatelessWidget {
     );
   }
 }
+
+
