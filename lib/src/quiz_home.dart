@@ -25,15 +25,19 @@ class _HomePageState extends State<HomePage> {
               action: () => Navigator.push(
                   context, MaterialPageRoute(builder: (context) => quiz)))));
     });
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('測試'),
+    return WillPopScope(
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('測試', style: Theme.of(context).textTheme.headline5),
+          automaticallyImplyLeading: false,
+        ),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[Text('請選擇一個測試')] + buttons,
+        ),
       ),
-      body: Column(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: <Widget>[Text('請選擇一個測試')] + buttons,
-      ),
+      onWillPop: () async => false,
     );
   }
 
