@@ -1,10 +1,12 @@
 import 'dart:convert';
 
+import 'package:after_layout/after_layout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'globals.dart';
+import 'instructions.dart';
 import 'quiz.dart';
 import 'user_info.dart';
 
@@ -13,7 +15,8 @@ class InformationForm extends StatefulWidget {
   _InformationFormState createState() => _InformationFormState();
 }
 
-class _InformationFormState extends State<InformationForm> {
+class _InformationFormState extends State<InformationForm>
+    with AfterLayoutMixin<InformationForm> {
   String _userName = '';
   DateTime _userDateOfBirth = DateTime.now();
   String _userGender = '';
@@ -21,6 +24,30 @@ class _InformationFormState extends State<InformationForm> {
   bool _userNameWarning = false;
   bool _userDateOfBirthWarning = false;
   bool _userGenderWarning = false;
+
+  void _init() async {
+    final file = await globals.loadFromAssets(
+        'assets/audios/instructions/', 'info_page.mp3');
+    pushInstructionPage(
+      context,
+      [
+        Text('請填上基本資料'),
+        globals.soundManager.playUserAudioButton(
+          file: file,
+          style: ElevatedButton.styleFrom(
+            primary: Colors.blue,
+          ),
+          child: Text("播放指示"),
+          onTick: null,
+        ),
+      ],
+    );
+  }
+
+  @override
+  void afterFirstLayout(context) {
+    _init();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +98,7 @@ class _InformationFormState extends State<InformationForm> {
           minimumSize: Size(double.infinity, 50.0),
           primary: Colors.transparent,
         ),
-        child: Text('出生日期: ' + Globals.dateFormatter.format(_userDateOfBirth)),
+        child: Text('出生日期: ' + globals.dateFormatter.format(_userDateOfBirth)),
         onPressed: () async {
           final DateTime picked = await showDatePicker(
             context: context,
@@ -120,8 +147,8 @@ class _InformationFormState extends State<InformationForm> {
         setState(() {
           _userNameWarning = _userName.isEmpty;
           _userDateOfBirthWarning =
-              Globals.dateFormatter.format(_userDateOfBirth) ==
-                  Globals.dateFormatter.format(DateTime.now());
+              globals.dateFormatter.format(_userDateOfBirth) ==
+                  globals.dateFormatter.format(DateTime.now());
           _userGenderWarning = _userGender.isEmpty;
         });
         if (!_userNameWarning &&

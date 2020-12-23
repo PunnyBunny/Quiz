@@ -64,12 +64,12 @@ class _QuizState extends State<Quiz> {
   FlutterSoundPlayer _audioPlayer;
   FlutterSoundRecorder _audioRecorder;
 
-  void _init() async {
+  Future<void> _init() async {
     _audioPlayer = await FlutterSoundPlayer().openAudioSession();
     await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 20));
     _audioRecorder = await FlutterSoundRecorder().openAudioSession();
 
-    final dir = await Globals.userAudiosPath();
+    final dir = await globals.userAudiosPath();
     await dir.delete(recursive: true);
     await dir.create(recursive: true);
   }
@@ -297,7 +297,7 @@ class _QuizState extends State<Quiz> {
                 _timerSeconds = 0;
                 _isUsingAudioService = true;
               });
-              final file = await Globals.userAudioPath(_questionNumber);
+              final file = await globals.userAudioPath(_questionNumber);
               await _audioRecorder.startRecorder(toFile: file.path);
             }
           },
@@ -331,7 +331,7 @@ class _QuizState extends State<Quiz> {
                 _isUsingAudioService = true;
               });
 
-              final file = await Globals.userAudioPath(_questionNumber);
+              final file = await globals.userAudioPath(_questionNumber);
               _playerSubscription =
                   _audioPlayer.onProgress.listen((event) async {
                 print(event.position);

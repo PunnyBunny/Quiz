@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
-import 'globals.dart' as globals;
+import 'globals.dart';
 import 'user_result.dart';
 
 class McSummaryPage extends StatefulWidget {
@@ -75,3 +75,5 @@ class _McSummaryPageState extends State<McSummaryPage> {
     );
   }
 }
+
+// TODO: sync with audio_summary.dart
