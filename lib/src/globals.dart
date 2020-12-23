@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
@@ -11,7 +12,7 @@ class Globals {
     soundManager.init();
   }
 
-  final SERVER_URI = 'http://testquiz.hopto.org:5000';
+  final serverUri = 'http://testquiz.hopto.org:5000';
   final dateFormatter = DateFormat('dd-MM-yyyy');
   final soundManager = SoundManager();
 
@@ -34,12 +35,15 @@ class Globals {
   }
 
   // create a file in app's document folder for access to assets as file object
-  Future<File> loadFromAssets(String assetFilePath, String filename) async {
+  Future<File> loadFromAssets(
+      {BuildContext context, String assetFilePath, String filename}) async {
     final path = await localPath();
     final file = File(path.path + assetFilePath + filename);
     if (!await file.exists()) {
       await file.create(recursive: true);
-      final data = await rootBundle.load(assetFilePath + filename);
+      final data = context == null
+          ? await rootBundle.load(assetFilePath + filename)
+          : await DefaultAssetBundle.of(context).load(assetFilePath + filename);
       file.writeAsBytes(data.buffer.asInt8List());
     }
     return file;
