@@ -6,7 +6,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show rootBundle;
 
 import 'globals.dart';
-import 'instructions.dart';
 import 'quiz.dart';
 import 'user_info.dart';
 
@@ -25,45 +24,19 @@ class _InformationFormState extends State<InformationForm>
   bool _userDateOfBirthWarning = false;
   bool _userGenderWarning = false;
 
-  void _init() async {
-    final file = await globals.loadFromAssets(
-        'assets/audios/instructions/', 'info_page.mp3');
-    pushInstructionPage(
-      context,
-      [
-        Text('請填上基本資料'),
-        globals.soundManager.playUserAudioButton(
-          file: file,
-          style: ElevatedButton.styleFrom(
-            primary: Colors.blue,
-          ),
-          child: Text("播放指示"),
-          onTick: null,
-        ),
-      ],
-    );
-  }
-
-  @override
-  void afterFirstLayout(context) {
-    _init();
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('請填寫基本資料'),
-        automaticallyImplyLeading: false,
-      ),
       body: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.center,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
+          Text('請填寫基本資料', style: Theme.of(context).textTheme.headline4),
           _nameField(),
           _dateOfBirthField(),
           _genderField(),
           _submitButton(),
+          _instructionButton(),
         ],
       ),
     );
@@ -81,6 +54,7 @@ class _InformationFormState extends State<InformationForm>
         },
         decoration: InputDecoration(
           hintText: '姓名',
+          hintStyle: Theme.of(context).textTheme.headline6,
           border: OutlineInputBorder(),
         ),
       ),
@@ -95,10 +69,13 @@ class _InformationFormState extends State<InformationForm>
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
           side: BorderSide(color: Colors.white, width: 1.0),
-          minimumSize: Size(double.infinity, 50.0),
+          minimumSize: Size(double.infinity, 60.0),
           primary: Colors.transparent,
         ),
-        child: Text('出生日期: ' + globals.dateFormatter.format(_userDateOfBirth)),
+        child: Text(
+          '出生日期: ' + globals.dateFormatter.format(_userDateOfBirth),
+          style: Theme.of(context).textTheme.headline6,
+        ),
         onPressed: () async {
           final DateTime picked = await showDatePicker(
             context: context,
@@ -121,7 +98,7 @@ class _InformationFormState extends State<InformationForm>
       padding: EdgeInsets.all(8.0),
       child: DropdownButton(
         value: _userGender.isEmpty ? null : _userGender,
-        hint: Text('性別'),
+        hint: Text('性別', style: Theme.of(context).textTheme.headline6),
         items: [
           DropdownMenuItem(value: 'm', child: Text('男')),
           DropdownMenuItem(value: 'f', child: Text('女')),
@@ -136,31 +113,49 @@ class _InformationFormState extends State<InformationForm>
   }
 
   Widget _submitButton() {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
-        side: BorderSide(color: Colors.white, width: 1.0),
-        primary: Colors.green,
+    return Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
+          side: BorderSide(color: Colors.white, width: 1.0),
+          primary: Colors.green,
+        ),
+        child: Text('遞交'),
+        onPressed: () async {
+          setState(() {
+            _userNameWarning = _userName.isEmpty;
+            _userDateOfBirthWarning =
+                globals.dateFormatter.format(_userDateOfBirth) ==
+                    globals.dateFormatter.format(DateTime.now());
+            _userGenderWarning = _userGender.isEmpty;
+          });
+          if (!_userNameWarning &&
+              !_userDateOfBirthWarning &&
+              !_userGenderWarning) {
+            // all information is correctly filed
+            currentUserInfo =
+                UserInfo(_userName, _userDateOfBirth, _userGender);
+            _confirm();
+          } else {
+            _alert();
+          }
+        },
       ),
-      child: Text('遞交'),
-      onPressed: () async {
-        setState(() {
-          _userNameWarning = _userName.isEmpty;
-          _userDateOfBirthWarning =
-              globals.dateFormatter.format(_userDateOfBirth) ==
-                  globals.dateFormatter.format(DateTime.now());
-          _userGenderWarning = _userGender.isEmpty;
-        });
-        if (!_userNameWarning &&
-            !_userDateOfBirthWarning &&
-            !_userGenderWarning) {
-          // all information is correctly filed
-          currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
-          _confirm();
-        } else {
-          _alert();
-        }
-      },
+    );
+  }
+
+  Widget _instructionButton() {
+    return Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          primary: Colors.blue,
+        ),
+        child: Text('查看指示'),
+        onPressed: _pushInstructionsPage,
+      ),
     );
   }
 
@@ -223,5 +218,18 @@ class _InformationFormState extends State<InformationForm>
     loaded.forEach((data) {
       quizzes.add(Quiz.fromJson(data));
     });
+  }
+
+  Future<void> _pushInstructionsPage() async {
+    await Navigator.pushNamed(context, '/info_form/instructions');
+  }
+
+  void _init() async {
+    await _pushInstructionsPage();
+  }
+
+  @override
+  void afterFirstLayout(context) {
+    _init();
   }
 }
