@@ -9,7 +9,7 @@ import 'src/globals.dart';
 import 'src/info_form.dart';
 import 'src/mc_summary.dart';
 import 'src/quiz.dart';
-import 'src/quiz_home.dart';
+import 'src/home_page.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/info_form': (context) => InformationForm(),
