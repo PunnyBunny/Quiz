@@ -28,7 +28,21 @@ class SoundManager {
     return Text('$minute:$seconds');
   }
 
-  Future<void> _stopPlayer() async {
+  Future<void> pauseAudioService() async {
+    _playerSubscription?.pause();
+    _timerSubscription?.pause();
+    if (_audioPlayer.isPlaying) await _audioPlayer.pausePlayer();
+    if (_audioRecorder.isRecording) await _audioRecorder.pauseRecorder();
+  }
+
+  Future<void> resumeAudioService() async {
+    _playerSubscription?.resume();
+    _timerSubscription?.resume();
+    if (_audioPlayer.isPlaying) await _audioPlayer.resumePlayer();
+    if (_audioRecorder.isRecording) await _audioRecorder.resumeRecorder();
+  }
+
+  Future<void> stopAudioService() async {
     _playerSubscription?.cancel();
     _timerSubscription?.cancel();
 
@@ -72,6 +86,7 @@ class SoundManager {
     ButtonStyle style,
     Widget child,
     void Function(int) onTick,
+    void Function() onPressed,
     bool disable: false,
   }) {
     return Padding(
@@ -91,9 +106,11 @@ class SoundManager {
 
             _playerSubscription = _audioPlayer.onProgress.listen((event) async {
               if (event.duration - event.position <=
-                  Duration(milliseconds: 200)) await _stopPlayer();
+                  Duration(milliseconds: 200)) await stopAudioService();
             });
+
             await _audioPlayer.startPlayer(fromURI: file.uri.toString());
+            onPressed();
           }
         },
       ),
@@ -104,6 +121,7 @@ class SoundManager {
     ButtonStyle style,
     Widget child,
     bool disable: false,
+    void Function() onPressed,
   }) {
     return Padding(
       padding: const EdgeInsets.all(8.0),
@@ -112,10 +130,47 @@ class SoundManager {
         child: child,
         onPressed: () async {
           if (!disable) {
-            await _stopPlayer();
+            await stopAudioService();
           }
+          onPressed();
         },
       ),
+    );
+  }
+
+  Widget pauseAudioServiceButton({
+    ButtonStyle style,
+    Widget child,
+    bool disable: false,
+    void Function() onPressed,
+  }) {
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () {
+        if (!disable) {
+          pauseAudioService();
+        }
+        onPressed();
+      },
+    );
+  }
+
+  Widget resumeAudioServiceButton({
+    ButtonStyle style,
+    Widget child,
+    bool disable: false,
+    void Function() onPressed,
+  }) {
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () {
+        if (!disable) {
+          resumeAudioService();
+        }
+        onPressed();
+      },
     );
   }
 
@@ -133,16 +188,24 @@ class SoundManager {
     void stopTimer() {
       timer?.cancel();
       timer = null;
-      counter = 0;
       controller.close();
     }
 
     void startTimer() {
+      counter = 0;
       timer = Timer.periodic(interval, tick);
     }
 
-    controller =
-        StreamController<int>(onListen: startTimer, onCancel: stopTimer);
+    void resumeTimer() {
+      timer = Timer.periodic(interval, tick);
+    }
+
+    controller = StreamController<int>(
+      onListen: startTimer,
+      onCancel: stopTimer,
+      onPause: stopTimer,
+      onResume: resumeTimer,
+    );
 
     return controller.stream;
   }
