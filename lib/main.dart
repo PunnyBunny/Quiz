@@ -7,16 +7,13 @@ import 'package:permission_handler/permission_handler.dart';
 import 'src/audio_summary.dart';
 import 'src/globals.dart';
 import 'src/info_form.dart';
-import 'src/instructions.dart';
 import 'src/mc_summary.dart';
 import 'src/quiz.dart';
 import 'src/quiz_home.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/info_form': (context) => InformationForm(),
-  '/info_form/instructions': (context) => infoFormInstructions(context),
   '/': (context) => HomePage(),
-  '/instructions': (context) => homePageInstructions(context),
   '/mc_summary': (context) => McSummaryPage(),
   '/audio_summary': (context) => AudioSummaryPage(),
 };
@@ -88,8 +85,6 @@ class MyApp extends StatelessWidget {
     loaded.forEach((data) {
       quizzes.add(Quiz.fromJson(data));
     });
-    quizzes.forEach((quiz) {
-
-    });
+    quizzes.forEach((quiz) {});
   }
 }
