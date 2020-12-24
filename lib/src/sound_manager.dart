@@ -15,6 +15,7 @@ class SoundManager {
 
   int timerSeconds = 0;
   bool isUsingAudioService = false;
+  bool isPausingAudioService = false;
 
   Future<void> init() async {
     _audioPlayer = await FlutterSoundPlayer().openAudioSession();
@@ -29,25 +30,27 @@ class SoundManager {
   }
 
   Future<void> pauseAudioService() async {
+    isPausingAudioService = true;
+    if (!_audioPlayer.isStopped) await _audioPlayer.pausePlayer();
+    if (!_audioRecorder.isStopped) await _audioRecorder.pauseRecorder();
     _playerSubscription?.pause();
     _timerSubscription?.pause();
-    if (_audioPlayer.isPlaying) await _audioPlayer.pausePlayer();
-    if (_audioRecorder.isRecording) await _audioRecorder.pauseRecorder();
   }
 
   Future<void> resumeAudioService() async {
+    isPausingAudioService = false;
+    if (_audioPlayer.isPaused) await _audioPlayer.resumePlayer();
+    if (_audioRecorder.isPaused) await _audioRecorder.resumeRecorder();
     _playerSubscription?.resume();
     _timerSubscription?.resume();
-    if (_audioPlayer.isPlaying) await _audioPlayer.resumePlayer();
-    if (_audioRecorder.isRecording) await _audioRecorder.resumeRecorder();
   }
 
   Future<void> stopAudioService() async {
     _playerSubscription?.cancel();
     _timerSubscription?.cancel();
 
-    _timerStream = null;
     isUsingAudioService = false;
+    isPausingAudioService = false;
 
     await _audioPlayer.stopPlayer();
     await _audioRecorder.stopRecorder();
@@ -71,9 +74,9 @@ class SoundManager {
             _timerSubscription = _timerStream.listen((seconds) {
               callback(seconds);
             });
+            isUsingAudioService = true;
 
             timerSeconds = 0;
-            isUsingAudioService = true;
             await _audioRecorder.startRecorder(toFile: file.uri.toString());
           }
         },
@@ -87,6 +90,7 @@ class SoundManager {
     Widget child,
     void Function(int) onTick,
     void Function() onPressed,
+    void Function() onDone,
     bool disable: false,
   }) {
     return Padding(
@@ -106,12 +110,16 @@ class SoundManager {
 
             _playerSubscription = _audioPlayer.onProgress.listen((event) async {
               if (event.duration - event.position <=
-                  Duration(milliseconds: 200)) await stopAudioService();
+                  Duration(milliseconds: 200)) {
+                await stopAudioService();
+                onDone();
+              }
             });
 
-            await _audioPlayer.startPlayer(fromURI: file.uri.toString());
-            onPressed();
+            await _audioPlayer.startPlayer(
+                fromURI: file.uri.toString(), codec: Codec.mp3);
           }
+          onPressed();
         },
       ),
     );
@@ -144,15 +152,18 @@ class SoundManager {
     bool disable: false,
     void Function() onPressed,
   }) {
-    return ElevatedButton(
-      style: style,
-      child: child,
-      onPressed: () {
-        if (!disable) {
-          pauseAudioService();
-        }
-        onPressed();
-      },
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ElevatedButton(
+        style: style,
+        child: child,
+        onPressed: () {
+          if (!disable) {
+            pauseAudioService();
+          }
+          onPressed();
+        },
+      ),
     );
   }
 
@@ -162,15 +173,18 @@ class SoundManager {
     bool disable: false,
     void Function() onPressed,
   }) {
-    return ElevatedButton(
-      style: style,
-      child: child,
-      onPressed: () {
-        if (!disable) {
-          resumeAudioService();
-        }
-        onPressed();
-      },
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: ElevatedButton(
+        style: style,
+        child: child,
+        onPressed: () {
+          if (!disable) {
+            resumeAudioService();
+          }
+          onPressed();
+        },
+      ),
     );
   }
 

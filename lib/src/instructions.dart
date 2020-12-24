@@ -17,6 +17,7 @@ class InstructionPage extends StatefulWidget {
 
 class _InstructionPageState extends State<InstructionPage> {
   bool _isPlaying = false;
+  bool _isPaused = false;
 
   @override
   Widget build(BuildContext context) {
@@ -42,9 +43,8 @@ class _InstructionPageState extends State<InstructionPage> {
                           primary: _isPlaying ? Colors.blueGrey : Colors.blue,
                         ),
                         child: Text("播放指示"),
-                        onPressed: () => setState(() {
-                          _isPlaying = globals.soundManager.isUsingAudioService;
-                        }),
+                        onPressed: _getButtonStates,
+                        onDone: _getButtonStates,
                         disable: _isPlaying,
                       ),
                       globals.soundManager.stopUserAudioButton(
@@ -52,11 +52,28 @@ class _InstructionPageState extends State<InstructionPage> {
                           primary: _isPlaying ? Colors.red : Colors.blueGrey,
                         ),
                         child: Icon(Icons.stop),
-                        onPressed: () => setState(() {
-                          _isPlaying =
-                              globals.soundManager.isUsingAudioService;
-                        }),
+                        onPressed: _getButtonStates,
                         disable: !_isPlaying, // disable if not playing
+                      ),
+                      globals.soundManager.pauseAudioServiceButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: _isPaused || !_isPlaying
+                              ? Colors.blueGrey
+                              : Colors.blue,
+                        ),
+                        child: Icon(Icons.pause),
+                        onPressed: _getButtonStates,
+                        disable: _isPaused || !_isPlaying,
+                      ),
+                      globals.soundManager.resumeAudioServiceButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: !_isPaused || !_isPlaying
+                              ? Colors.blueGrey
+                              : Colors.blue,
+                        ),
+                        child: Icon(Icons.play_arrow),
+                        onPressed: _getButtonStates,
+                        disable: !_isPaused || !_isPlaying,
                       ),
                     ],
                   ),
@@ -93,5 +110,12 @@ class _InstructionPageState extends State<InstructionPage> {
         },
       ),
     );
+  }
+
+  void _getButtonStates() {
+    setState(() {
+      _isPlaying = globals.soundManager.isUsingAudioService;
+      _isPaused = globals.soundManager.isPausingAudioService;
+    });
   }
 }
