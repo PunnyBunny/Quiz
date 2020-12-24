@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
 import 'globals.dart';
+import 'instructions.dart';
 import 'user_info.dart';
 
 class InformationForm extends StatefulWidget {
@@ -128,9 +129,10 @@ class _InformationFormState extends State<InformationForm> {
           if (!_userNameWarning &&
               !_userDateOfBirthWarning &&
               !_userGenderWarning) {
-          // all information is correctly filed
-          currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
-          _confirm();
+            // all information is correctly filed
+            currentUserInfo =
+                UserInfo(_userName, _userDateOfBirth, _userGender);
+            _confirm();
           } else {
             _alert();
           }
@@ -147,7 +149,8 @@ class _InformationFormState extends State<InformationForm> {
           primary: Colors.blue,
         ),
         child: Text('查看指示'),
-        onPressed: _pushInstructionsPage,
+        onPressed: () async => await Navigator.push(
+            context, MaterialPageRoute(builder: _instructionsPage)),
       ),
     );
   }
@@ -204,7 +207,11 @@ class _InformationFormState extends State<InformationForm> {
     );
   }
 
-  Future<void> _pushInstructionsPage() async {
-    await Navigator.pushNamed(context, '/info_form/instructions');
+  Widget _instructionsPage(BuildContext context) {
+    return InstructionPage(
+      instruction: '請填上基本資料',
+      assetFilePath: 'assets/audios/instructions/',
+      filename: 'info_form.mp3',
+    );
   }
 }

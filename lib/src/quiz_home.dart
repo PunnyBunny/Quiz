@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
+import 'instructions.dart';
 import 'quiz.dart';
 
-class HomePage extends StatelessWidget {
+class HomePage extends StatefulWidget {
+  @override
+  _HomePageState createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
   final RandomColor _randomColor = RandomColor();
 
   @override
@@ -22,21 +28,15 @@ class HomePage extends StatelessWidget {
     });
     return WillPopScope(
       child: Scaffold(
-        body: Center(
-          child: ListView(
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.center,
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                      Text('請依次序選擇一個測試',
-                          style: Theme.of(context).textTheme.headline4),
-                      _instructionButton(context)
-                    ] +
-                    buttons,
-              ),
-            ],
-          ),
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: <Widget>[
+                Text('請依次序選擇一個測試',
+                    style: Theme.of(context).textTheme.headline4),
+                _instructionButton(context)
+              ] +
+              buttons,
         ),
       ),
       onWillPop: () async => false,
@@ -71,9 +71,17 @@ class HomePage extends StatelessWidget {
           primary: Colors.blue,
         ),
         child: Text('查看指示'),
-        onPressed: () async =>
-            await Navigator.pushNamed(context, '/instructions'),
+        onPressed: () async => await Navigator.push(
+            context, MaterialPageRoute(builder: _instructionsPage)),
       ),
+    );
+  }
+
+  Widget _instructionsPage(BuildContext context) {
+    return InstructionPage(
+      instruction: '請按次序，逐一完成六個部分。',
+      assetFilePath: 'assets/audios/instructions/',
+      filename: 'home_page.mp3',
     );
   }
 }

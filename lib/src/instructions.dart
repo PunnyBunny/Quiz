@@ -2,126 +2,96 @@ import 'package:flutter/material.dart';
 
 import 'globals.dart';
 
-class InstructionPage extends StatelessWidget {
-  final List<Widget> children;
+class InstructionPage extends StatefulWidget {
+  final String instruction;
+  final String assetFilePath;
+  final String filename;
 
-  const InstructionPage({Key key, this.children}) : super(key: key);
+  const InstructionPage(
+      {Key key, this.instruction, this.assetFilePath, this.filename})
+      : super(key: key);
+
+  @override
+  _InstructionPageState createState() => _InstructionPageState();
+}
+
+class _InstructionPageState extends State<InstructionPage> {
+  bool _isPlaying = false;
 
   @override
   Widget build(BuildContext context) {
-    final padding = Padding(padding: EdgeInsets.all(20.0));
-
     return Scaffold(
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [_title(context), padding] +
-              children +
-              [padding, _backButton(context)],
-        ),
+      body: FutureBuilder(
+          future: globals.loadFromAssets(
+              context: context,
+              assetFilePath: widget.assetFilePath,
+              filename: widget.filename),
+          builder: (context, snapshot) {
+            if (snapshot.hasData) {
+              return Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  _title(),
+                  Text(widget.instruction),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      globals.soundManager.playUserAudioButton(
+                        file: snapshot.data,
+                        style: ElevatedButton.styleFrom(
+                          primary: _isPlaying ? Colors.blueGrey : Colors.blue,
+                        ),
+                        child: Text("播放指示"),
+                        onPressed: () => setState(() {
+                          _isPlaying = globals.soundManager.isUsingAudioService;
+                        }),
+                        disable: _isPlaying,
+                      ),
+                      globals.soundManager.stopUserAudioButton(
+                        style: ElevatedButton.styleFrom(
+                          primary: _isPlaying ? Colors.red : Colors.blueGrey,
+                        ),
+                        child: Icon(Icons.stop),
+                        onPressed: () => setState(() {
+                          _isPlaying =
+                              globals.soundManager.isUsingAudioService;
+                        }),
+                        disable: !_isPlaying, // disable if not playing
+                      ),
+                    ],
+                  ),
+                  _backButton(),
+                ],
+              );
+            } else {
+              return Container();
+            }
+          }),
+    );
+  }
+
+  Widget _title() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: Text(
+        '香港中學生粵語語義能力測試',
+        style: Theme.of(context).textTheme.headline5,
+        textAlign: TextAlign.center,
       ),
     );
   }
 
-  Widget _title(BuildContext context) {
-    return Text(
-      '香港中學生粵語語義能力測試',
-      style: Theme.of(context).textTheme.headline5,
-      textAlign: TextAlign.center,
+  Widget _backButton() {
+    return Padding(
+      padding: const EdgeInsets.all(20.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(primary: Colors.blue),
+        child: Text('知道'),
+        onPressed: () async {
+          await globals.soundManager.stopAudioService();
+          Navigator.pop(context);
+        },
+      ),
     );
   }
-
-  Widget _backButton(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(primary: Colors.blue),
-      child: Text('知道'),
-      onPressed: () {
-        Navigator.pop(context);
-      },
-    );
-  }
-}
-
-Widget infoFormInstructions(context) {
-  return FutureBuilder(
-      future: globals.loadFromAssets(
-          context: context,
-          assetFilePath: 'assets/audios/instructions/',
-          filename: 'info_form.mp3'),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return InstructionPage(
-            children: [
-              Text('請填上基本資料'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  globals.soundManager.playUserAudioButton(
-                    file: snapshot.data,
-                    style: ElevatedButton.styleFrom(
-                      primary: globals.soundManager.isUsingAudioService
-                          ? Colors.blueGrey
-                          : Colors.blue,
-                    ),
-                    child: Text("播放指示"),
-
-                  ),
-                  globals.soundManager.stopUserAudioButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: globals.soundManager.isUsingAudioService
-                          ? Colors.red
-                          : Colors.blueGrey,
-                    ),
-                    child: Icon(Icons.stop),
-                  ),
-                ],
-              ),
-            ],
-          );
-        } else {
-          return Container();
-        }
-      });
-}
-
-Widget homePageInstructions(BuildContext context) {
-  return FutureBuilder(
-      future: globals.loadFromAssets(
-          context: context,
-          assetFilePath: 'assets/audios/instructions/',
-          filename: 'home_page.mp3'),
-      builder: (context, snapshot) {
-        if (snapshot.hasData) {
-          return InstructionPage(
-            children: [
-              Text('請按次序，逐一完成六個部分。'),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  globals.soundManager.playUserAudioButton(
-                    file: snapshot.data,
-                    style: ElevatedButton.styleFrom(
-                      primary: globals.soundManager.isUsingAudioService
-                          ? Colors.blueGrey
-                          : Colors.blue,
-                    ),
-                    child: Text("播放指示"),
-                    onTick: null,
-                  ),
-                  globals.soundManager.stopUserAudioButton(
-                    style: ElevatedButton.styleFrom(
-                      primary: globals.soundManager.isUsingAudioService
-                          ? Colors.red
-                          : Colors.blueGrey,
-                    ),
-                    child: Icon(Icons.stop),
-                  ),
-                ],
-              ),
-            ],
-          );
-        } else {
-          return Container();
-        }
-      });
 }
