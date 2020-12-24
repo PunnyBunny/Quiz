@@ -9,7 +9,17 @@ import 'src/globals.dart';
 import 'src/info_form.dart';
 import 'src/instructions.dart';
 import 'src/mc_summary.dart';
+import 'src/quiz.dart';
 import 'src/quiz_home.dart';
+
+Map<String, Widget Function(BuildContext)> routes = {
+  '/info_form': (context) => InformationForm(),
+  '/info_form/instructions': (context) => infoFormInstructions(context),
+  '/': (context) => HomePage(),
+  '/instructions': (context) => homePageInstructions(context),
+  '/mc_summary': (context) => McSummaryPage(),
+  '/audio_summary': (context) => AudioSummaryPage(),
+};
 
 void main() async {
   final app = MyApp();
@@ -42,19 +52,15 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.dark,
       ),
       initialRoute: '/info_form',
-      routes: {
-        '/info_form': (context) => InformationForm(),
-        '/info_form/instructions': (context) => infoFormInstructions(context),
-        '/': (context) => HomePage(),
-        '/mc_summary': (context) => McSummaryPage(),
-        '/audio_summary': (context) => AudioSummaryPage(),
-      },
+      routes: routes,
     );
   }
 
   Future<void> init() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+    WidgetsFlutterBinding.ensureInitialized(); // for using rootBundle
+    await SystemChrome.setPreferredOrientations(
+        [DeviceOrientation.portraitUp]); // make user can't rotate screen
+
     var statuses = await [
       Permission.microphone,
       Permission.storage,
@@ -63,9 +69,9 @@ class MyApp extends StatelessWidget {
       assert(value.isGranted);
     });
 
+    // load all audio assets into app document folder
     final manifestContent = await rootBundle.loadString('AssetManifest.json');
-    final Map<String, dynamic> manifestMap = json.decode(manifestContent);
-
+    final Map<String, dynamic> manifestMap = jsonDecode(manifestContent);
     manifestMap.forEach((key, value) {
       if (key.contains('audios/') && key.contains('.mp3')) {
         int lastSlashPosition = key.lastIndexOf('/');
@@ -74,6 +80,16 @@ class MyApp extends StatelessWidget {
           filename: key.substring(lastSlashPosition + 1),
         );
       }
+    });
+
+    // load quiz data from json
+    String json = await rootBundle.loadString('assets/data.json');
+    List<dynamic> loaded = jsonDecode(json);
+    loaded.forEach((data) {
+      quizzes.add(Quiz.fromJson(data));
+    });
+    quizzes.forEach((quiz) {
+
     });
   }
 }

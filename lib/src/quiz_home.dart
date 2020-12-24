@@ -3,13 +3,8 @@ import 'package:random_color/random_color.dart';
 
 import 'quiz.dart';
 
-class HomePage extends StatefulWidget {
-  @override
-  _HomePageState createState() => _HomePageState();
-}
-
-class _HomePageState extends State<HomePage> {
-  RandomColor _randomColor = RandomColor();
+class HomePage extends StatelessWidget {
+  final RandomColor _randomColor = RandomColor();
 
   @override
   Widget build(BuildContext context) {
@@ -27,14 +22,21 @@ class _HomePageState extends State<HomePage> {
     });
     return WillPopScope(
       child: Scaffold(
-        appBar: AppBar(
-          title: Text('測試', style: Theme.of(context).textTheme.headline5),
-          automaticallyImplyLeading: false,
-        ),
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[Text('請選擇一個測試')] + buttons,
+        body: Center(
+          child: ListView(
+            children: [
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                      Text('請依次序選擇一個測試',
+                          style: Theme.of(context).textTheme.headline4),
+                      _instructionButton(context)
+                    ] +
+                    buttons,
+              ),
+            ],
+          ),
         ),
       ),
       onWillPop: () async => false,
@@ -57,6 +59,20 @@ class _HomePageState extends State<HomePage> {
         ),
         onPressed: action,
         child: Text(title),
+      ),
+    );
+  }
+
+  Widget _instructionButton(context) {
+    return Padding(
+      padding: const EdgeInsets.all(15.0),
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          primary: Colors.blue,
+        ),
+        child: Text('查看指示'),
+        onPressed: () async =>
+            await Navigator.pushNamed(context, '/instructions'),
       ),
     );
   }

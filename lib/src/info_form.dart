@@ -1,12 +1,7 @@
-import 'dart:convert';
-
-import 'package:after_layout/after_layout.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle;
 
 import 'globals.dart';
-import 'quiz.dart';
 import 'user_info.dart';
 
 class InformationForm extends StatefulWidget {
@@ -14,8 +9,7 @@ class InformationForm extends StatefulWidget {
   _InformationFormState createState() => _InformationFormState();
 }
 
-class _InformationFormState extends State<InformationForm>
-    with AfterLayoutMixin<InformationForm> {
+class _InformationFormState extends State<InformationForm> {
   String _userName = '';
   DateTime _userDateOfBirth = DateTime.now();
   String _userGender = '';
@@ -134,10 +128,9 @@ class _InformationFormState extends State<InformationForm>
           if (!_userNameWarning &&
               !_userDateOfBirthWarning &&
               !_userGenderWarning) {
-            // all information is correctly filed
-            currentUserInfo =
-                UserInfo(_userName, _userDateOfBirth, _userGender);
-            _confirm();
+          // all information is correctly filed
+          currentUserInfo = UserInfo(_userName, _userDateOfBirth, _userGender);
+          _confirm();
           } else {
             _alert();
           }
@@ -195,7 +188,6 @@ class _InformationFormState extends State<InformationForm>
           actions: [
             ElevatedButton(
               onPressed: () async {
-                await _loadJson();
                 Navigator.popAndPushNamed(context, '/');
               },
               child: Text('好'),
@@ -212,24 +204,7 @@ class _InformationFormState extends State<InformationForm>
     );
   }
 
-  Future<void> _loadJson() async {
-    String json = await rootBundle.loadString('assets/data.json');
-    List<dynamic> loaded = jsonDecode(json);
-    loaded.forEach((data) {
-      quizzes.add(Quiz.fromJson(data));
-    });
-  }
-
   Future<void> _pushInstructionsPage() async {
     await Navigator.pushNamed(context, '/info_form/instructions');
-  }
-
-  void _init() async {
-    await _pushInstructionsPage();
-  }
-
-  @override
-  void afterFirstLayout(context) {
-    _init();
   }
 }
