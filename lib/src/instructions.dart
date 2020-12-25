@@ -40,47 +40,59 @@ class _InstructionPageState extends State<InstructionPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   _title(),
-                  Text(widget.instruction),
+                  Text(widget.instruction, textAlign: TextAlign.center),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      globals.soundManager.playAudioButton(
-                        file: snapshot.data,
-                        style: ElevatedButton.styleFrom(
-                          primary: _isPlaying ? Colors.blueGrey : Colors.blue,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: globals.soundManager.playAudioButton(
+                          file: snapshot.data,
+                          style: ElevatedButton.styleFrom(
+                            primary: _isPlaying ? Colors.blueGrey : Colors.blue,
+                          ),
+                          child: Text("播放指示"),
+                          onPressed: getButtonStates,
+                          onStop: getButtonStates,
+                          disable: _isPlaying,
                         ),
-                        child: Text("播放指示"),
-                        onPressed: getButtonStates,
-                        onStop: getButtonStates,
-                        disable: _isPlaying,
                       ),
-                      globals.soundManager.stopAudioButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: _isPlaying ? Colors.red : Colors.blueGrey,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: globals.soundManager.stopAudioButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: _isPlaying ? Colors.red : Colors.blueGrey,
+                          ),
+                          child: Icon(Icons.stop),
+                          onPressed: getButtonStates,
+                          disable: !_isPlaying, // disable if not playing
                         ),
-                        child: Icon(Icons.stop),
-                        onPressed: getButtonStates,
-                        disable: !_isPlaying, // disable if not playing
                       ),
-                      globals.soundManager.pauseAudioServiceButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: _isPaused || !_isPlaying
-                              ? Colors.blueGrey
-                              : Colors.blue,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: globals.soundManager.pauseAudioServiceButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: _isPaused || !_isPlaying
+                                ? Colors.blueGrey
+                                : Colors.blue,
+                          ),
+                          child: Icon(Icons.pause),
+                          onPressed: getButtonStates,
+                          disable: _isPaused || !_isPlaying,
                         ),
-                        child: Icon(Icons.pause),
-                        onPressed: getButtonStates,
-                        disable: _isPaused || !_isPlaying,
                       ),
-                      globals.soundManager.resumeAudioServiceButton(
-                        style: ElevatedButton.styleFrom(
-                          primary: !_isPaused || !_isPlaying
-                              ? Colors.blueGrey
-                              : Colors.blue,
+                      Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: globals.soundManager.resumeAudioServiceButton(
+                          style: ElevatedButton.styleFrom(
+                            primary: !_isPaused || !_isPlaying
+                                ? Colors.blueGrey
+                                : Colors.blue,
+                          ),
+                          child: Icon(Icons.play_arrow),
+                          onPressed: getButtonStates,
+                          disable: !_isPaused || !_isPlaying,
                         ),
-                        child: Icon(Icons.play_arrow),
-                        onPressed: getButtonStates,
-                        disable: !_isPaused || !_isPlaying,
                       ),
                     ],
                   ),

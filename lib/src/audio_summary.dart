@@ -24,7 +24,7 @@ class _AudioSummaryPageState extends State<AudioSummaryPage> {
           File((await getTemporaryDirectory()).path + '/audios.zip');
       await zipFile.create();
       await ZipFile.createFromDirectory(
-          sourceDir: await globals.userAudiosPath(), zipFile: zipFile);
+          sourceDir: await globals.userAudioDirectory, zipFile: zipFile);
       var request = http.MultipartRequest('POST', Uri.parse(globals.serverUri))
         ..fields['action'] = 'add_new'
         ..fields['type'] = 'audio'

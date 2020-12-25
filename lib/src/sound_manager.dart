@@ -29,7 +29,7 @@ class SoundManager {
   Widget timer() {
     String minute = '${timerSeconds ~/ 60}'.padLeft(2, '0'),
         seconds = '${timerSeconds % 60}'.padLeft(2, '0');
-    return Text('$minute:$seconds');
+    return Text('$minute:$seconds', style: TextStyle(fontSize: 30.0));
   }
 
   Future<void> pauseAudioService() async {
@@ -110,7 +110,6 @@ class SoundManager {
       child: child,
       onPressed: () async {
         _playerOnStop = onStop;
-        print(file.path);
         if (!disable) {
           _timerStream = _stopwatchStream();
           _timerSubscription = _timerStream.listen((seconds) {
@@ -129,7 +128,7 @@ class SoundManager {
             }
           });
 
-          await _audioPlayer.startPlayer(fromURI: file.path);
+          await _audioPlayer.startPlayer(fromURI: file.path, codec: Codec.mp3);
         }
         onPressed();
       },

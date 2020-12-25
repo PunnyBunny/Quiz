@@ -71,6 +71,8 @@ class MyApp extends StatelessWidget {
     });
 
     // load all audio assets into app document folder
+    final path = await globals.localPath;
+    path.delete(recursive: true);
     final manifestContent = await rootBundle.loadString('AssetManifest.json');
     final Map<String, dynamic> manifestMap = jsonDecode(manifestContent);
     manifestMap.forEach((key, value) {
