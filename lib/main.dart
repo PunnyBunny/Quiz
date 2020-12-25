@@ -4,10 +4,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-import 'src/audio_summary.dart';
 import 'src/globals.dart';
 import 'src/info_form.dart';
-import 'src/mc_summary.dart';
 import 'src/quiz.dart';
 import 'src/home_page.dart';
 
