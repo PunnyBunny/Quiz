@@ -3,44 +3,13 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_archive/flutter_archive.dart';
 import 'package:http/http.dart' as http;
-import 'package:path_provider/path_provider.dart';
 
 import 'globals.dart';
 import 'user_result.dart';
 
-class AudioSummaryPage extends StatefulWidget {
-  @override
-  _AudioSummaryPageState createState() => _AudioSummaryPageState();
-}
+UserResult _result;
 
-class _AudioSummaryPageState extends State<AudioSummaryPage> {
-  @override
-  void initState() {
-    super.initState();
-    Future.delayed(Duration.zero, () async {
-      final UserResult result = ModalRoute.of(context).settings.arguments;
-
-      final zipFile =
-          File((await getTemporaryDirectory()).path + '/audios.zip');
-      await zipFile.create();
-      await ZipFile.createFromDirectory(
-          sourceDir: await globals.userAudioDirectory, zipFile: zipFile);
-      var request = http.MultipartRequest('POST', Uri.parse(globals.serverUri))
-        ..fields['action'] = 'add_new'
-        ..fields['type'] = 'audio'
-        ..fields['name'] = result.name
-        ..fields['date_of_birth'] =
-            globals.dateFormatter.format(result.dateOfBirth)
-        ..fields['gender'] = '${result.score}'
-        ..fields['test_name'] = result.testName
-        ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
-
-      final response = await request.send();
-      assert(response.statusCode == 200);
-      print('uploaded audios zip file');
-    });
-  }
-
+class AudioSummaryPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return WillPopScope(
@@ -76,5 +45,29 @@ class _AudioSummaryPageState extends State<AudioSummaryPage> {
         ),
       ),
     );
+  }
+
+  AudioSummaryPage(UserResult result) {
+    _result = result;
+    Future.delayed(Duration.zero, () async {
+      final zipFile = File('${(await globals.localPath).path}/audios.zip');
+      await ZipFile.createFromDirectory(
+        sourceDir: await globals.userAudioDirectory,
+        zipFile: zipFile,
+        includeBaseDirectory: true,
+      );
+      var request = http.MultipartRequest('POST', Uri.parse(globals.serverUri))
+        ..fields['type'] = 'audio'
+        ..fields['name'] = _result.name
+        ..fields['date_of_birth'] =
+            globals.dateFormatter.format(_result.dateOfBirth)
+        ..fields['gender'] = _result.gender
+        ..fields['test_name'] = _result.testName
+        ..fields['length'] = '${_result.testLength}'
+        ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
+      final response = await request.send().timeout(Duration(seconds: 5));
+      print(response.statusCode);
+      assert(response.statusCode == 200);
+    });
   }
 }

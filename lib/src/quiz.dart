@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import 'audio_summary.dart';
 import 'globals.dart';
 import 'instructions.dart';
+import 'mc_summary.dart';
 import 'user_info.dart';
 import 'user_result.dart';
 
@@ -93,6 +95,10 @@ class _QuizState extends State<Quiz> {
   void initState() {
     super.initState();
     _userInputs = List<String>.filled(widget.length, '', growable: true);
+    globals.userAudioDirectory.then((dir) async {
+      await dir.delete(recursive: true);
+      await dir.create(recursive: true);
+    });
   }
 
   @override
@@ -280,7 +286,10 @@ class _QuizState extends State<Quiz> {
                 onPressed: _getButtonStates,
                 onStop: () {
                   _getButtonStates();
-                  _userInputs[_questionNumber] = 'done';
+                  if (_userInputs[_questionNumber].isEmpty) {
+                    _userInputs[_questionNumber] = 'done';
+                    ++_noOfQuestionsFilled;
+                  }
                 },
                 onTick: _updateTimer,
                 disable: disable,
@@ -452,27 +461,34 @@ class _QuizState extends State<Quiz> {
                 score++;
               }
             }
-            Navigator.pushNamed(
+            Navigator.push(
               context,
-              '/mc_summary',
-              arguments: UserResult(
-                name: currentUserInfo.name,
-                dateOfBirth: currentUserInfo.dateOfBirth,
-                gender: currentUserInfo.gender,
-                testName: widget.title,
-                score: score,
-                testLength: widget.length,
+              MaterialPageRoute(
+                builder: (_) => McSummaryPage(
+                  UserResult(
+                    name: currentUserInfo.name,
+                    dateOfBirth: currentUserInfo.dateOfBirth,
+                    gender: currentUserInfo.gender,
+                    testName: widget.title,
+                    score: score,
+                    testLength: widget.length,
+                  ),
+                ),
               ),
             );
           } else {
-            Navigator.pushNamed(
+            Navigator.push(
               context,
-              '/audio_summary',
-              arguments: UserResult(
-                name: currentUserInfo.name,
-                dateOfBirth: currentUserInfo.dateOfBirth,
-                gender: currentUserInfo.gender,
-                testName: widget.title,
+              MaterialPageRoute(
+                builder: (_) => AudioSummaryPage(
+                  UserResult(
+                    name: currentUserInfo.name,
+                    dateOfBirth: currentUserInfo.dateOfBirth,
+                    gender: currentUserInfo.gender,
+                    testName: widget.title,
+                    testLength: widget.length,
+                  ),
+                ),
               ),
             );
           }

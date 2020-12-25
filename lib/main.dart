@@ -14,8 +14,6 @@ import 'src/home_page.dart';
 Map<String, Widget Function(BuildContext)> routes = {
   '/info_form': (context) => InformationForm(),
   '/': (context) => HomePage(),
-  '/mc_summary': (context) => McSummaryPage(),
-  '/audio_summary': (context) => AudioSummaryPage(),
 };
 
 void main() async {
