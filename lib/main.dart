@@ -42,8 +42,12 @@ class MyApp extends StatelessWidget {
           ),
           headline1: TextStyle(
             // use headline 1 for warnings
-            fontSize: 24.0,
+            fontSize: 28.0,
             color: Colors.red,
+          ),
+          headline5: TextStyle(
+            fontSize: 24.0,
+            color: Colors.white,
           ),
         ),
         brightness: Brightness.dark,
@@ -73,7 +77,7 @@ class MyApp extends StatelessWidget {
       if (key.contains('audios/') && key.contains('.mp3')) {
         int lastSlashPosition = key.lastIndexOf('/');
         globals.loadFromAssets(
-          assetFilePath: key.substring(0, lastSlashPosition + 1),
+          assetFilePath: key.substring(0, lastSlashPosition),
           filename: key.substring(lastSlashPosition + 1),
         );
       }

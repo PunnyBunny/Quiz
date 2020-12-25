@@ -1,7 +1,4 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_sound/flutter_sound.dart';
 import 'package:json_annotation/json_annotation.dart';
 
 import 'globals.dart';
@@ -50,43 +47,17 @@ class Quiz extends StatefulWidget {
 }
 
 class _QuizState extends State<Quiz> {
-  Stream<int> _timerStream;
-  StreamSubscription<int> _timerSubscription;
-  int _timerSeconds = 0;
-
-  StreamSubscription<PlaybackDisposition> _playerSubscription;
-
-  bool _isUsingAudioService = false;
-
   int _questionNumber = 0;
   List<String> _userInputs;
   int _noOfQuestionsFilled = 0;
-  FlutterSoundPlayer _audioPlayer;
-  FlutterSoundRecorder _audioRecorder;
 
-  Future<void> _init() async {
-    _audioPlayer = await FlutterSoundPlayer().openAudioSession();
-    await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 20));
-    _audioRecorder = await FlutterSoundRecorder().openAudioSession();
-
-    final dir = await globals.userAudiosPath();
-    await dir.delete(recursive: true);
-    await dir.create(recursive: true);
-  }
+  bool _isUsingAudioService = false;
+  bool _isPausingAudioService = false;
 
   @override
   void initState() {
     super.initState();
     _userInputs = List<String>.filled(widget.length, '', growable: true);
-    Future.delayed(Duration.zero, _init);
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    _audioPlayer.closeAudioSession().then((v) async {
-      await _audioRecorder.closeAudioSession();
-    });
   }
 
   @override
@@ -106,10 +77,9 @@ class _QuizState extends State<Quiz> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                    _playSystemAudioButton(),
                     _goal(),
                     _question(),
-                    _userAudio(),
+                    _userAudioSection(),
                   ] +
                   _choiceButtons() +
                   [
@@ -172,216 +142,179 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget _playSystemAudioButton() {
-    return widget.type == QuizType.AUDIO
-        ? Container()
-        : Padding(
-            padding: EdgeInsets.all(2.0),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5.0)),
-                side: BorderSide(color: Colors.white, width: 1.0),
-                minimumSize: Size(150.0, 25.0),
-                primary: Colors.lightBlue,
-              ),
-              child: Text('播放問題'),
-              onPressed: () {
-                _audioPlayer.openAudioSession().then((player) async {
-                  await player.startPlayer(
-                      fromURI:
-                          'assets/audios/${widget.audios[_questionNumber]}.mp3');
-                });
-              },
-            ),
-          );
-  }
-
   Widget _goal() {
     return Padding(
-      padding: EdgeInsets.all(10.0),
+      padding: const EdgeInsets.all(20.0),
       child: Text(
-        widget.goal,
-        style: Theme.of(context).textTheme.headline3,
+        widget.goal + ':',
+        style: Theme.of(context).textTheme.headline5,
         textAlign: TextAlign.center,
       ),
     );
   }
 
   Widget _question() {
-    return widget.questions == null
-        ? Container()
-        : Padding(
-            padding: EdgeInsets.all(10.0),
-            child: Text(
-              widget.questions[_questionNumber],
-              style: Theme.of(context).textTheme.headline4,
-              textAlign: TextAlign.center,
-            ),
-          );
+    if (widget.questions == null) {
+      return Container();
+    } else {
+      return Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Container(
+          padding: const EdgeInsets.all(10.0),
+          decoration: BoxDecoration(border: Border.all(color: Colors.white)),
+          child: Text(
+            widget.questions[_questionNumber],
+            style: TextStyle(),
+            textAlign: TextAlign.center,
+          ),
+        ),
+      );
+    }
   }
 
-  Widget _userAudio() {
-    Stream<int> _stopwatchStream() {
-      StreamController<int> controller;
-      Timer timer;
-      final interval = Duration(seconds: 1);
-      int counter = 0;
-
-      void tick(_) {
-        ++counter;
-        controller.add(counter);
-      }
-
-      void stopTimer() {
-        timer?.cancel();
-        timer = null;
-        counter = 0;
-        controller.close();
-      }
-
-      void startTimer() {
-        timer = Timer.periodic(interval, tick);
-      }
-
-      controller =
-          StreamController<int>(onListen: startTimer, onCancel: stopTimer);
-
-      return controller.stream;
+  Widget _userAudioSection() {
+    Widget _timer() {
+      return Padding(
+        padding: const EdgeInsets.all(12.0),
+        child: globals.soundManager.timer(),
+      );
     }
 
-    Widget _audioTimer() {
-      String minute = '${_timerSeconds ~/ 60}'.padLeft(2, '0'),
-          seconds = '${_timerSeconds % 60}'.padLeft(2, '0');
-      return Text('$minute:$seconds');
-    }
-
-    Future<void> _stopPlayer() async {
-      _playerSubscription?.cancel();
-      _timerSubscription?.cancel();
-
-      _timerStream = null;
-
-      setState(() {
-        if (_userInputs[_questionNumber].isEmpty) {
-          _userInputs[_questionNumber] = 'done';
-          ++_noOfQuestionsFilled;
-        }
-        _isUsingAudioService = false;
-      });
-
-      await _audioPlayer.stopPlayer();
-      await _audioRecorder.stopRecorder();
+    Widget _playQuestionAudioButton() {
+      return FutureBuilder(
+          future: globals.loadFromAssets(
+              assetFilePath: 'assets/audios',
+              filename: '${widget.audios[_questionNumber]}'),
+          builder: (context, snapshot) {
+            bool disable = _isUsingAudioService;
+            if (snapshot.hasData) {
+              return globals.soundManager.playAudioButton(
+                file: snapshot.data,
+                style: ElevatedButton.styleFrom(
+                  primary: disable ? Colors.blueGrey : Colors.blue,
+                ),
+                child: Text("播放問題"),
+                onPressed: _getButtonStates,
+                onStop: _getButtonStates,
+                onTick: _updateTimer,
+                disable: disable,
+              );
+            } else {
+              return Container();
+            }
+          });
     }
 
     Widget _recordUserAudioButton() {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(200.0, 50.0),
-            primary: _isUsingAudioService ? Colors.grey : Colors.blue,
-          ),
-          child: _userInputs[_questionNumber].isEmpty
-              ? Text("錄製答案")
-              : Text("重新錄製答案"),
-          onPressed: () async {
-            if (!_isUsingAudioService) {
-              _timerStream = _stopwatchStream();
-              _timerSubscription = _timerStream.listen((seconds) {
-                setState(() {
-                  _timerSeconds = seconds;
-                });
-              });
-              setState(() {
-                _timerSeconds = 0;
-                _isUsingAudioService = true;
-              });
-              final file = await globals.userAudioPath(_questionNumber);
-              await _audioRecorder.startRecorder(toFile: file.path);
+      return FutureBuilder(
+          future: globals.userAudioPath(_questionNumber),
+          builder: (context, snapshot) {
+            if (widget.type == QuizType.AUDIO && snapshot.hasData) {
+              bool disable = _isUsingAudioService;
+              return globals.soundManager.recordAudioButton(
+                file: snapshot.data,
+                style: ElevatedButton.styleFrom(
+                  primary: disable ? Colors.blueGrey : Colors.blue,
+                ),
+                child: Text("錄製答案"),
+                onPressed: _getButtonStates,
+                onStop: () {
+                  _getButtonStates();
+                  _userInputs[_questionNumber] = 'done';
+                },
+                onTick: _updateTimer,
+                disable: disable,
+              );
+            } else {
+              return Container();
             }
-          },
-        ),
-      );
+          });
     }
 
     Widget _playUserAudioButton() {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(200.0, 50.0),
-            primary:
-                _isUsingAudioService || _userInputs[_questionNumber].isEmpty
-                    ? Colors.grey
-                    : Colors.blue,
-          ),
-          child: Text("播放已錄製的答案"),
-          onPressed: () async {
-            if (!_isUsingAudioService &&
-                _userInputs[_questionNumber].isNotEmpty) {
-              _timerStream = _stopwatchStream();
-              _timerSubscription = _timerStream.listen((seconds) {
-                setState(() {
-                  _timerSeconds = seconds;
-                });
-              });
-              setState(() {
-                _timerSeconds = 0;
-                _isUsingAudioService = true;
-              });
-
-              final file = await globals.userAudioPath(_questionNumber);
-              _playerSubscription =
-                  _audioPlayer.onProgress.listen((event) async {
-                print(event.position);
-                if (event.duration - event.position <=
-                    Duration(milliseconds: 200)) await _stopPlayer();
-              });
-              await _audioPlayer.startPlayer(fromURI: file.uri.toString());
+      return FutureBuilder(
+          future: globals.userAudioPath(_questionNumber),
+          builder: (context, snapshot) {
+            if (widget.type == QuizType.AUDIO && snapshot.hasData) {
+              bool disable =
+                  _isUsingAudioService || _userInputs[_questionNumber].isEmpty;
+              return globals.soundManager.playAudioButton(
+                file: snapshot.data,
+                style: ElevatedButton.styleFrom(
+                  primary: disable ? Colors.blueGrey : Colors.blue,
+                ),
+                child: Text("播放已錄製的答案"),
+                onPressed: _getButtonStates,
+                onStop: _getButtonStates,
+                onTick: _updateTimer,
+                disable: disable,
+              );
+            } else {
+              return Container();
             }
-          },
+          });
+    }
+
+    Widget _stopAudioButton() {
+      final disable = !_isUsingAudioService;
+      return globals.soundManager.stopAudioButton(
+        style: ElevatedButton.styleFrom(
+          primary: disable ? Colors.blueGrey : Colors.red,
         ),
+        child: Icon(Icons.stop),
+        disable: disable,
+        onPressed: _getButtonStates,
       );
     }
 
-    Widget _stopUserAudioButton() {
-      return Padding(
-        padding: const EdgeInsets.all(8.0),
-        child: ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: Size(50.0, 50.0),
-            primary: _isUsingAudioService ? Colors.red : Colors.grey,
-          ),
-          child: Icon(Icons.stop, color: Colors.black),
-          onPressed: () async {
-            if (_isUsingAudioService) {
-              await _stopPlayer();
-            }
-          },
+    Widget _pauseAudioButton() {
+      final disable = (!_isUsingAudioService) || _isPausingAudioService;
+      return globals.soundManager.pauseAudioServiceButton(
+        style: ElevatedButton.styleFrom(
+          primary: disable ? Colors.blueGrey : Colors.blue,
         ),
+        child: Icon(Icons.pause),
+        disable: disable,
+        onPressed: _getButtonStates,
       );
     }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            _audioTimer(),
-            _stopUserAudioButton(),
-          ],
+    Widget _resumeAudioButton() {
+      final disable = (!_isUsingAudioService) || !_isPausingAudioService;
+      return globals.soundManager.resumeAudioServiceButton(
+        style: ElevatedButton.styleFrom(
+          primary: disable ? Colors.blueGrey : Colors.blue,
         ),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _recordUserAudioButton(),
-            _playUserAudioButton(),
-          ],
-        ),
-      ],
+        child: Icon(Icons.play_arrow),
+        disable: disable,
+        onPressed: _getButtonStates,
+      );
+    }
+
+    return Padding(
+      padding: const EdgeInsets.all(8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              _playQuestionAudioButton(),
+              _playUserAudioButton(),
+              _recordUserAudioButton(),
+            ],
+          ),
+          _timer(),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _stopAudioButton(),
+              _pauseAudioButton(),
+              _resumeAudioButton(),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -404,10 +337,9 @@ class _QuizState extends State<Quiz> {
                     side: BorderSide(color: Colors.white54, width: 3.0),
                   ),
                   onPressed: () async {
-                    await _audioPlayer.closeAudioSession();
-                    await _audioPlayer.stopPlayer();
+                    await globals.soundManager.stopAudioService();
 
-                    if (_userInputs[_questionNumber] == '') {
+                    if (_userInputs[_questionNumber].isEmpty) {
                       setState(() {
                         _noOfQuestionsFilled++;
                       });
@@ -416,10 +348,7 @@ class _QuizState extends State<Quiz> {
                       _userInputs[_questionNumber] = choice;
                     });
                   },
-                  child: Text(
-                    choice,
-                    style: TextStyle(fontSize: 20.0, color: Colors.white),
-                  ),
+                  child: Text(choice),
                 ),
               ),
             )
@@ -447,9 +376,9 @@ class _QuizState extends State<Quiz> {
   Widget _submitButton() {
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        primary: _noOfQuestionsFilled == widget.length && !_isUsingAudioService
-            ? Colors.green
-            : Colors.blueGrey,
+        primary: _noOfQuestionsFilled == widget.length || _isUsingAudioService
+            ? Colors.blueGrey
+            : Colors.green,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         minimumSize: Size(100.0, 50.0),
       ),
@@ -543,5 +472,15 @@ class _QuizState extends State<Quiz> {
             ),
           );
   }
+
+  void _getButtonStates() {
+    setState(() {
+      _isUsingAudioService = globals.soundManager.isUsingAudioService;
+      _isPausingAudioService = globals.soundManager.isPausingAudioService;
+    });
+  }
+
+  void _updateTimer() {
+    setState(() {});
+  }
 }
-// TODO: add back A_008.wav and E_009.wav

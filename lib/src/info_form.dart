@@ -150,7 +150,7 @@ class _InformationFormState extends State<InformationForm> {
         ),
         child: Text('查看指示'),
         onPressed: () async => await Navigator.push(
-            context, MaterialPageRoute(builder: _instructionsPage)),
+            context, MaterialPageRoute(builder: _instructionPage)),
       ),
     );
   }
@@ -207,10 +207,10 @@ class _InformationFormState extends State<InformationForm> {
     );
   }
 
-  Widget _instructionsPage(BuildContext context) {
+  Widget _instructionPage(BuildContext context) {
     return InstructionPage(
       instruction: '請填上基本資料',
-      assetFilePath: 'assets/audios/instructions/',
+      assetFilePath: 'assets/audios/instructions',
       filename: 'info_form.mp3',
     );
   }

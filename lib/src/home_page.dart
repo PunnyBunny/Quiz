@@ -72,15 +72,15 @@ class _HomePageState extends State<HomePage> {
         ),
         child: Text('查看指示'),
         onPressed: () async => await Navigator.push(
-            context, MaterialPageRoute(builder: _instructionsPage)),
+            context, MaterialPageRoute(builder: _instructionPage)),
       ),
     );
   }
 
-  Widget _instructionsPage(BuildContext context) {
+  Widget _instructionPage(BuildContext context) {
     return InstructionPage(
       instruction: '請按次序，逐一完成六個部分。',
-      assetFilePath: 'assets/audios/instructions/',
+      assetFilePath: 'assets/audios/instructions',
       filename: 'home_page.mp3',
     );
   }

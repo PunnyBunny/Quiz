@@ -17,10 +17,13 @@ class SoundManager {
   bool isUsingAudioService = false;
   bool isPausingAudioService = false;
 
+  Function() _recorderOnStop, _playerOnStop;
+
   Future<void> init() async {
     _audioPlayer = await FlutterSoundPlayer().openAudioSession();
     await _audioPlayer.setSubscriptionDuration(Duration(milliseconds: 20));
     _audioRecorder = await FlutterSoundRecorder().openAudioSession();
+    await _audioRecorder.setSubscriptionDuration(Duration(milliseconds: 20));
   }
 
   Widget timer() {
@@ -54,95 +57,100 @@ class SoundManager {
 
     await _audioPlayer.stopPlayer();
     await _audioRecorder.stopRecorder();
+
+    _playerOnStop?.call();
+    _recorderOnStop?.call();
+    _playerOnStop = null;
+    _recorderOnStop = null;
   }
 
-  Widget recordUserAudioButton({
+  Widget recordAudioButton({
     File file,
     ButtonStyle style,
     Widget child,
-    void Function(int) callback,
+    void Function() onTick,
+    void Function() onPressed,
+    void Function() onStop,
     bool disable: false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: style,
-        child: child,
-        onPressed: () async {
-          if (!disable) {
-            _timerStream = _stopwatchStream();
-            _timerSubscription = _timerStream.listen((seconds) {
-              callback(seconds);
-            });
-            isUsingAudioService = true;
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () async {
+        _recorderOnStop = onStop;
+        if (!disable) {
+          _timerStream = _stopwatchStream();
+          _timerSubscription = _timerStream.listen((seconds) {
+            timerSeconds = seconds;
+            onTick?.call();
+          });
 
-            timerSeconds = 0;
-            await _audioRecorder.startRecorder(toFile: file.uri.toString());
-          }
-        },
-      ),
+          timerSeconds = 0;
+          onTick?.call();
+          isUsingAudioService = true;
+
+          await _audioRecorder.startRecorder(toFile: file.path);
+        }
+        onPressed();
+      },
     );
   }
 
-  Widget playUserAudioButton({
+  Widget playAudioButton({
     File file,
     ButtonStyle style,
     Widget child,
-    void Function(int) onTick,
+    void Function() onTick,
     void Function() onPressed,
-    void Function() onDone,
+    void Function() onStop,
     bool disable: false,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: style,
-        child: child,
-        onPressed: () async {
-          if (!disable) {
-            _timerStream = _stopwatchStream();
-            _timerSubscription = _timerStream.listen((seconds) {
-              timerSeconds = seconds;
-            });
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () async {
+        _playerOnStop = onStop;
+        print(file.path);
+        if (!disable) {
+          _timerStream = _stopwatchStream();
+          _timerSubscription = _timerStream.listen((seconds) {
+            timerSeconds = seconds;
+            onTick?.call();
+          });
 
-            timerSeconds = 0;
-            isUsingAudioService = true;
+          timerSeconds = 0;
+          onTick?.call();
+          isUsingAudioService = true;
 
-            _playerSubscription = _audioPlayer.onProgress.listen((event) async {
-              if (event.duration - event.position <=
-                  Duration(milliseconds: 200)) {
-                await stopAudioService();
-                onDone();
-              }
-            });
+          _playerSubscription = _audioPlayer.onProgress.listen((event) async {
+            if (event.duration - event.position <=
+                Duration(milliseconds: 200)) {
+              await stopAudioService();
+            }
+          });
 
-            await _audioPlayer.startPlayer(
-                fromURI: file.uri.toString(), codec: Codec.mp3);
-          }
-          onPressed();
-        },
-      ),
+          await _audioPlayer.startPlayer(fromURI: file.path);
+        }
+        onPressed();
+      },
     );
   }
 
-  Widget stopUserAudioButton({
+  Widget stopAudioButton({
     ButtonStyle style,
     Widget child,
     bool disable: false,
     void Function() onPressed,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: style,
-        child: child,
-        onPressed: () async {
-          if (!disable) {
-            await stopAudioService();
-          }
-          onPressed();
-        },
-      ),
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () async {
+        if (!disable) {
+          await stopAudioService();
+        }
+        onPressed();
+      },
     );
   }
 
@@ -152,18 +160,15 @@ class SoundManager {
     bool disable: false,
     void Function() onPressed,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: style,
-        child: child,
-        onPressed: () {
-          if (!disable) {
-            pauseAudioService();
-          }
-          onPressed();
-        },
-      ),
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () {
+        if (!disable) {
+          pauseAudioService();
+        }
+        onPressed();
+      },
     );
   }
 
@@ -173,18 +178,15 @@ class SoundManager {
     bool disable: false,
     void Function() onPressed,
   }) {
-    return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: ElevatedButton(
-        style: style,
-        child: child,
-        onPressed: () {
-          if (!disable) {
-            resumeAudioService();
-          }
-          onPressed();
-        },
-      ),
+    return ElevatedButton(
+      style: style,
+      child: child,
+      onPressed: () {
+        if (!disable) {
+          resumeAudioService();
+        }
+        onPressed();
+      },
     );
   }
 
@@ -202,7 +204,6 @@ class SoundManager {
     void stopTimer() {
       timer?.cancel();
       timer = null;
-      controller.close();
     }
 
     void startTimer() {

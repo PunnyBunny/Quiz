@@ -21,6 +21,13 @@ class _InstructionPageState extends State<InstructionPage> {
 
   @override
   Widget build(BuildContext context) {
+    void getButtonStates() {
+      setState(() {
+        _isPlaying = globals.soundManager.isUsingAudioService;
+        _isPaused = globals.soundManager.isPausingAudioService;
+      });
+    }
+
     return Scaffold(
       body: FutureBuilder(
           future: globals.loadFromAssets(
@@ -37,22 +44,22 @@ class _InstructionPageState extends State<InstructionPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      globals.soundManager.playUserAudioButton(
+                      globals.soundManager.playAudioButton(
                         file: snapshot.data,
                         style: ElevatedButton.styleFrom(
                           primary: _isPlaying ? Colors.blueGrey : Colors.blue,
                         ),
                         child: Text("播放指示"),
-                        onPressed: _getButtonStates,
-                        onDone: _getButtonStates,
+                        onPressed: getButtonStates,
+                        onStop: getButtonStates,
                         disable: _isPlaying,
                       ),
-                      globals.soundManager.stopUserAudioButton(
+                      globals.soundManager.stopAudioButton(
                         style: ElevatedButton.styleFrom(
                           primary: _isPlaying ? Colors.red : Colors.blueGrey,
                         ),
                         child: Icon(Icons.stop),
-                        onPressed: _getButtonStates,
+                        onPressed: getButtonStates,
                         disable: !_isPlaying, // disable if not playing
                       ),
                       globals.soundManager.pauseAudioServiceButton(
@@ -62,7 +69,7 @@ class _InstructionPageState extends State<InstructionPage> {
                               : Colors.blue,
                         ),
                         child: Icon(Icons.pause),
-                        onPressed: _getButtonStates,
+                        onPressed: getButtonStates,
                         disable: _isPaused || !_isPlaying,
                       ),
                       globals.soundManager.resumeAudioServiceButton(
@@ -72,7 +79,7 @@ class _InstructionPageState extends State<InstructionPage> {
                               : Colors.blue,
                         ),
                         child: Icon(Icons.play_arrow),
-                        onPressed: _getButtonStates,
+                        onPressed: getButtonStates,
                         disable: !_isPaused || !_isPlaying,
                       ),
                     ],
@@ -110,12 +117,5 @@ class _InstructionPageState extends State<InstructionPage> {
         },
       ),
     );
-  }
-
-  void _getButtonStates() {
-    setState(() {
-      _isPlaying = globals.soundManager.isUsingAudioService;
-      _isPaused = globals.soundManager.isPausingAudioService;
-    });
   }
 }
