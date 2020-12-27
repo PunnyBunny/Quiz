@@ -13,11 +13,9 @@ part 'quiz.g.dart';
 var quizzes = List<Quiz>();
 
 enum QuizType {
-  @JsonValue("audio")
-  AUDIO,
-  @JsonValue("mc")
-  MULTIPLE_CHOICE,
-}
+@JsonValue("audio")
+AUDIO,@JsonValue("mc")
+MULTIPLE_CHOICE,}
 
 @JsonSerializable()
 class Instruction {
@@ -37,8 +35,7 @@ class Instruction {
 
 @JsonSerializable()
 class Quiz extends StatefulWidget {
-  Quiz(
-      this.title,
+  Quiz(this.title,
       this.type,
       this.length,
       this.goal,
@@ -91,13 +88,32 @@ class _QuizState extends State<Quiz> {
   bool _isUsingAudioService = false;
   bool _isPausingAudioService = false;
 
+  bool _isPlayingInstructions = false;
+  bool _isPlayingUserAudio = false;
+
+  Widget _timer = globals.soundManager.timer();
+  final _greyscaleFilter = ColorFilter.matrix(<double>[
+    0.2126, 0.7152, 0.0722, 0, 0,
+    0.2126, 0.7152, 0.0722, 0, 0,
+    0.2126, 0.7152, 0.0722, 0, 0,
+    0, 0, 0, 1, 0,
+  ]);
+  final _identityFilter = ColorFilter.matrix(<double>[
+    1, 0, 0, 0, 0,
+    0, 1, 0, 0, 0,
+    0, 0, 1, 0, 0,
+    0, 0, 0, 1, 0,
+  ]);
+
   @override
   void initState() {
     super.initState();
     _userInputs = List<String>.filled(widget.length, '', growable: true);
     globals.userAudioDirectory.then((dir) async {
-      await dir.delete(recursive: true);
-      await dir.create(recursive: true);
+      if (await dir.exists()) {
+        await dir.delete(recursive: true);
+        await dir.create(recursive: true);
+      }
     });
   }
 
@@ -108,7 +124,7 @@ class _QuizState extends State<Quiz> {
       child: Scaffold(
         appBar: AppBar(
           title: Text(
-            '第 ${_questionNumber + 1}/${widget.length} 題',
+            '${widget.title}: 第 ${_questionNumber + 1}/${widget.length} 題',
             style: TextStyle(fontSize: 22.0),
           ),
           leading: _backButton(),
@@ -118,11 +134,12 @@ class _QuizState extends State<Quiz> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                    _instructionButton(),
-                    _goal(),
-                    _question(),
-                    _userAudioSection(),
-                  ] +
+                _instructionButton(),
+                Divider(color: Colors.white),
+                _goal(),
+                _question(),
+                _userAudioSection(),
+              ] +
                   _choiceButtons() +
                   [
                     Padding(
@@ -155,7 +172,10 @@ class _QuizState extends State<Quiz> {
             return AlertDialog(
               content: Text(
                 '確認退出？',
-                style: Theme.of(context).textTheme.headline1,
+                style: Theme
+                    .of(context)
+                    .textTheme
+                    .headline1,
               ),
               actions: [
                 ElevatedButton(
@@ -185,26 +205,36 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget _instructionButton() {
-    return Padding(
-      padding: const EdgeInsets.all(15.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          primary: Colors.blue,
-        ),
-        child: Text('查看指示'),
-        onPressed: () async => await Navigator.push(
-            context, MaterialPageRoute(builder: _instructionPage)),
-      ),
+    return ExpansionTile(
+      initiallyExpanded: true,
+      maintainState: true,
+      title: Text('查看指示', style: Theme
+          .of(context)
+          .textTheme
+          .headline5),
+      children: [_instructionPage()],
     );
   }
 
-  Widget _instructionPage(context) {
+  Widget _instructionPage() {
     final lastSlashIndex = widget.instruction.audio.lastIndexOf('/');
     return InstructionPage(
       instruction: widget.instruction.text,
       assetFilePath: 'assets/audios/' +
           widget.instruction.audio.substring(0, lastSlashIndex),
       filename: widget.instruction.audio.substring(lastSlashIndex + 1),
+      onPressed: () {
+        setState(() {
+          _isPlayingInstructions = true;
+        });
+      },
+      onStop: () {
+        setState(() {
+          _isPlayingInstructions = false;
+        });
+        _getButtonStates();
+      },
+      disable: _isPlayingUserAudio,
     );
   }
 
@@ -213,8 +243,11 @@ class _QuizState extends State<Quiz> {
       padding: const EdgeInsets.all(10.0),
       child: Text(
         widget.goal + ':',
-        style: Theme.of(context).textTheme.headline6,
-        textAlign: TextAlign.center,
+        style: Theme
+            .of(context)
+            .textTheme
+            .headline6,
+        textAlign: TextAlign.left,
       ),
     );
   }
@@ -230,8 +263,11 @@ class _QuizState extends State<Quiz> {
           decoration: BoxDecoration(border: Border.all(color: Colors.white)),
           child: Text(
             widget.questions[_questionNumber],
-            style: Theme.of(context).textTheme.headline5,
-            textAlign: TextAlign.center,
+            style: Theme
+                .of(context)
+                .textTheme
+                .headline5,
+            textAlign: TextAlign.left,
           ),
         ),
       );
@@ -239,20 +275,13 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget _userAudioSection() {
-    Widget _timer() {
-      return Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: globals.soundManager.timer(),
-      );
-    }
-
     Widget _playQuestionAudioButton() {
       return FutureBuilder(
           future: globals.loadFromAssets(
               assetFilePath: 'assets/audios',
               filename: '${widget.audios[_questionNumber]}'),
           builder: (context, snapshot) {
-            bool disable = _isUsingAudioService;
+            bool disable = _isUsingAudioService || _isPlayingInstructions;
             if (snapshot.hasData) {
               return globals.soundManager.playAudioButton(
                 file: snapshot.data,
@@ -260,8 +289,18 @@ class _QuizState extends State<Quiz> {
                   primary: disable ? Colors.blueGrey : Colors.blue,
                 ),
                 child: Text("播放問題"),
-                onPressed: _getButtonStates,
-                onStop: _getButtonStates,
+                onPressed: () {
+                  _getButtonStates();
+                  setState(() {
+                    _isPlayingUserAudio = true;
+                  });
+                },
+                onStop: () {
+                  _getButtonStates();
+                  setState(() {
+                    _isPlayingUserAudio = false;
+                  });
+                },
                 onTick: _updateTimer,
                 disable: disable,
               );
@@ -280,9 +319,19 @@ class _QuizState extends State<Quiz> {
               return globals.soundManager.recordAudioButton(
                 file: snapshot.data,
                 style: ElevatedButton.styleFrom(
-                  primary: disable ? Colors.blueGrey : Colors.blue,
+                  primary: Theme
+                      .of(context)
+                      .scaffoldBackgroundColor,
                 ),
-                child: Text("錄製答案"),
+                child: SizedBox(
+                  child: ColorFiltered(
+                    colorFilter: disable
+                        ? _greyscaleFilter : _identityFilter,
+                    child: Image.asset('assets/images/recorder_button.png'),
+                  ),
+                  height: 50.0,
+                  width: 50.0,
+                ),
                 onPressed: _getButtonStates,
                 onStop: () {
                   _getButtonStates();
@@ -373,7 +422,7 @@ class _QuizState extends State<Quiz> {
               _playUserAudioButton(),
             ],
           ),
-          _timer(),
+          _timer,
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -391,35 +440,36 @@ class _QuizState extends State<Quiz> {
     return widget.type == QuizType.AUDIO
         ? []
         : widget.choices[_questionNumber]
-            .map(
-              (choice) => Padding(
-                padding: EdgeInsets.zero,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: choice == _userInputs[_questionNumber]
-                        ? Colors.purple
-                        : Colors.lightBlue,
-                    minimumSize: const Size(350.0, 35.0),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                    ),
-                    side: BorderSide(color: Colors.white54, width: 3.0),
-                  ),
-                  onPressed: () async {
-                    if (_userInputs[_questionNumber].isEmpty) {
-                      setState(() {
-                        _noOfQuestionsFilled++;
-                      });
-                    }
-                    setState(() {
-                      _userInputs[_questionNumber] = choice;
-                    });
-                  },
-                  child: Text(choice),
+        .map(
+          (choice) =>
+          Padding(
+            padding: EdgeInsets.zero,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: choice == _userInputs[_questionNumber]
+                    ? Colors.purple
+                    : Colors.lightBlue,
+                minimumSize: const Size(350.0, 35.0),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                 ),
+                side: BorderSide(color: Colors.white54, width: 3.0),
               ),
-            )
-            .toList(); // choices
+              onPressed: () async {
+                if (_userInputs[_questionNumber].isEmpty) {
+                  setState(() {
+                    _noOfQuestionsFilled++;
+                  });
+                }
+                setState(() {
+                  _userInputs[_questionNumber] = choice;
+                });
+              },
+              child: Text(choice),
+            ),
+          ),
+    )
+        .toList(); // choices
   }
 
   Widget _prevQuestionButton() {
@@ -454,44 +504,80 @@ class _QuizState extends State<Quiz> {
       child: Text('遞交'),
       onPressed: () {
         if (_noOfQuestionsFilled == widget.length) {
-          if (widget.type == QuizType.MULTIPLE_CHOICE) {
-            int score = 0;
-            for (int i = 0; i < widget.length; ++i) {
-              if (_userInputs[i] == widget.correctAnswers[i]) {
-                score++;
-              }
-            }
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => McSummaryPage(
-                  UserResult(
-                    name: currentUserInfo.name,
-                    dateOfBirth: currentUserInfo.dateOfBirth,
-                    gender: currentUserInfo.gender,
-                    testName: widget.title,
-                    score: score,
-                    testLength: widget.length,
-                  ),
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                content: Text(
+                  '確認遞交？',
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .headline1,
                 ),
-              ),
-            );
-          } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => AudioSummaryPage(
-                  UserResult(
-                    name: currentUserInfo.name,
-                    dateOfBirth: currentUserInfo.dateOfBirth,
-                    gender: currentUserInfo.gender,
-                    testName: widget.title,
-                    testLength: widget.length,
+                actions: [
+                  ElevatedButton(
+                    child: Text('取消'),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.transparent,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                    },
                   ),
-                ),
-              ),
-            );
-          }
+                  ElevatedButton(
+                    child: Text('遞交'),
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.transparent,
+                    ),
+                    onPressed: () {
+                      Navigator.pop(context);
+                      if (widget.type == QuizType.MULTIPLE_CHOICE) {
+                        int score = 0;
+                        for (int i = 0; i < widget.length; ++i) {
+                          if (_userInputs[i] == widget.correctAnswers[i]) {
+                            score++;
+                          }
+                        }
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                McSummaryPage(
+                                  UserResult(
+                                    name: currentUserInfo.name,
+                                    dateOfBirth: currentUserInfo.dateOfBirth,
+                                    gender: currentUserInfo.gender,
+                                    testName: widget.title,
+                                    score: score,
+                                    testLength: widget.length,
+                                  ),
+                                ),
+                          ),
+                        );
+                      } else {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                AudioSummaryPage(
+                                  UserResult(
+                                    name: currentUserInfo.name,
+                                    dateOfBirth: currentUserInfo.dateOfBirth,
+                                    gender: currentUserInfo.gender,
+                                    testName: widget.title,
+                                    testLength: widget.length,
+                                  ),
+                                ),
+                          ),
+                        );
+                      }
+                    },
+                  ),
+                ],
+              );
+            },
+          );
         } else {
           showDialog(
             context: context,
@@ -499,7 +585,10 @@ class _QuizState extends State<Quiz> {
               return AlertDialog(
                 content: Text(
                   '請先完成所有題目',
-                  style: Theme.of(context).textTheme.headline1,
+                  style: Theme
+                      .of(context)
+                      .textTheme
+                      .headline1,
                 ),
                 actions: [
                   ElevatedButton(
@@ -544,11 +633,11 @@ class _QuizState extends State<Quiz> {
     return widget.images == null
         ? Container()
         : Padding(
-            padding: EdgeInsets.all(10.0),
-            child: Image.asset(
-              'assets/images/${widget.images[_questionNumber]}',
-            ),
-          );
+      padding: EdgeInsets.all(10.0),
+      child: Image.asset(
+        'assets/images/${widget.images[_questionNumber]}',
+      ),
+    );
   }
 
   void _getButtonStates() {
@@ -559,6 +648,8 @@ class _QuizState extends State<Quiz> {
   }
 
   void _updateTimer() {
-    setState(() {});
+    setState(() {
+      _timer = globals.soundManager.timer();
+    });
   }
 }

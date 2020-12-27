@@ -22,17 +22,27 @@ class _InformationFormState extends State<InformationForm> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: <Widget>[
-          Text('請填寫基本資料', style: Theme.of(context).textTheme.headline4),
-          _nameField(),
-          _dateOfBirthField(),
-          _genderField(),
-          _submitButton(),
-          _instructionButton(),
-        ],
+      body: GestureDetector(
+        onTap: () {
+          FocusScope.of(context).unfocus();
+        },
+        child: ListView(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                _instructionButton(),
+                Divider(color: Colors.white),
+                Text('請填寫基本資料', style: Theme.of(context).textTheme.headline4),
+                _nameField(),
+                _dateOfBirthField(),
+                _genderField(),
+                _submitButton(),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -41,7 +51,9 @@ class _InformationFormState extends State<InformationForm> {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: TextField(
-        autofocus: false,
+        onEditingComplete: () {
+          FocusScope.of(context).unfocus();
+        },
         onChanged: (name) {
           setState(() {
             _userName = name;
@@ -113,11 +125,10 @@ class _InformationFormState extends State<InformationForm> {
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
           shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
-          side: BorderSide(color: Colors.white, width: 1.0),
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
           primary: Colors.green,
         ),
-        child: Text('遞交'),
+        child: Text('遞交', style: Theme.of(context).textTheme.headline2),
         onPressed: () async {
           setState(() {
             _userNameWarning = _userName.isEmpty;
@@ -141,17 +152,20 @@ class _InformationFormState extends State<InformationForm> {
     );
   }
 
+  Widget _instructionPage() {
+    return InstructionPage(
+      instruction: '請填上基本資料',
+      assetFilePath: 'assets/audios/instructions',
+      filename: 'info_form.mp3',
+    );
+  }
+
   Widget _instructionButton() {
-    return Padding(
-      padding: const EdgeInsets.all(15.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          primary: Colors.blue,
-        ),
-        child: Text('查看指示'),
-        onPressed: () async => await Navigator.push(
-            context, MaterialPageRoute(builder: _instructionPage)),
-      ),
+    return ExpansionTile(
+      initiallyExpanded: true,
+      title: Text('查看指示', style: Theme.of(context).textTheme.headline5),
+      children: [_instructionPage()],
+      maintainState: true,
     );
   }
 
@@ -191,7 +205,10 @@ class _InformationFormState extends State<InformationForm> {
           actions: [
             ElevatedButton(
               onPressed: () async {
-                Navigator.popAndPushNamed(context, '/');
+                await globals.soundManager.stopAudioService();
+                Navigator.pop(context);
+                Navigator.pop(context);
+                Navigator.pushNamed(context, '/');
               },
               child: Text('好'),
             ),
@@ -204,14 +221,6 @@ class _InformationFormState extends State<InformationForm> {
           ],
         );
       },
-    );
-  }
-
-  Widget _instructionPage(BuildContext context) {
-    return InstructionPage(
-      instruction: '請填上基本資料',
-      assetFilePath: 'assets/audios/instructions',
-      filename: 'info_form.mp3',
     );
   }
 }

@@ -129,8 +129,8 @@ class SoundManager {
           });
 
           await _audioPlayer.startPlayer(fromURI: file.path, codec: Codec.mp3);
+          onPressed();
         }
-        onPressed();
       },
     );
   }
@@ -147,8 +147,8 @@ class SoundManager {
       onPressed: () async {
         if (!disable) {
           await stopAudioService();
+          onPressed();
         }
-        onPressed();
       },
     );
   }
@@ -165,8 +165,8 @@ class SoundManager {
       onPressed: () {
         if (!disable) {
           pauseAudioService();
+          onPressed();
         }
-        onPressed();
       },
     );
   }
@@ -183,8 +183,8 @@ class SoundManager {
       onPressed: () {
         if (!disable) {
           resumeAudioService();
+          onPressed();
         }
-        onPressed();
       },
     );
   }

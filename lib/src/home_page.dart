@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:quiz/src/globals.dart';
 import 'package:random_color/random_color.dart';
 
 import 'instructions.dart';
@@ -16,27 +17,39 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     var buttons = <Widget>[];
     quizzes.forEach((quiz) {
-      buttons.add(Padding(
+      buttons.add(
+        Padding(
           padding: EdgeInsets.all(12.0),
           child: _button(
-              title: quiz.title,
-              color: _randomColor.randomColor(
-                  colorHue: ColorHue.blue,
-                  colorBrightness: ColorBrightness.dark),
-              action: () => Navigator.push(
-                  context, MaterialPageRoute(builder: (context) => quiz)))));
+            title: quiz.title,
+            color: _randomColor.randomColor(
+                colorHue: ColorHue.blue, colorBrightness: ColorBrightness.dark),
+            action: () async {
+              await globals.soundManager.stopAudioService();
+              await Navigator.push(
+                  context, MaterialPageRoute(builder: (context) => quiz));
+            },
+          ),
+        ),
+      );
     });
+
     return WillPopScope(
       child: Scaffold(
-        body: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-                Text('請依次序選擇一個測試',
-                    style: Theme.of(context).textTheme.headline4),
-                _instructionButton(context)
-              ] +
-              buttons,
+        body: ListView(
+          children: [
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                    _instructionButton(),
+                    Divider(color: Colors.white),
+                    Text('請依次序選擇一個測試',
+                        style: Theme.of(context).textTheme.headline4),
+                  ] +
+                  buttons,
+            ),
+          ],
         ),
       ),
       onWillPop: () async => false,
@@ -63,21 +76,16 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _instructionButton(context) {
-    return Padding(
-      padding: const EdgeInsets.all(15.0),
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          primary: Colors.blue,
-        ),
-        child: Text('查看指示'),
-        onPressed: () async => await Navigator.push(
-            context, MaterialPageRoute(builder: _instructionPage)),
-      ),
+  Widget _instructionButton() {
+    return ExpansionTile(
+      initiallyExpanded: true,
+      maintainState: true,
+      title: Text('查看指示', style: Theme.of(context).textTheme.headline5),
+      children: [_instructionPage()],
     );
   }
 
-  Widget _instructionPage(BuildContext context) {
+  Widget _instructionPage() {
     return InstructionPage(
       instruction: '請按次序，逐一完成六個部分。',
       assetFilePath: 'assets/audios/instructions',
