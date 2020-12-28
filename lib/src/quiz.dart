@@ -13,9 +13,11 @@ part 'quiz.g.dart';
 var quizzes = List<Quiz>();
 
 enum QuizType {
-@JsonValue("audio")
-AUDIO,@JsonValue("mc")
-MULTIPLE_CHOICE,}
+  @JsonValue("audio")
+  AUDIO,
+  @JsonValue("mc")
+  MULTIPLE_CHOICE,
+}
 
 @JsonSerializable()
 class Instruction {
@@ -35,7 +37,8 @@ class Instruction {
 
 @JsonSerializable()
 class Quiz extends StatefulWidget {
-  Quiz(this.title,
+  Quiz(
+      this.title,
       this.type,
       this.length,
       this.goal,
@@ -93,16 +96,48 @@ class _QuizState extends State<Quiz> {
 
   Widget _timer = globals.soundManager.timer();
   final _greyscaleFilter = ColorFilter.matrix(<double>[
-    0.2126, 0.7152, 0.0722, 0, 0,
-    0.2126, 0.7152, 0.0722, 0, 0,
-    0.2126, 0.7152, 0.0722, 0, 0,
-    0, 0, 0, 1, 0,
+    0.2126,
+    0.7152,
+    0.0722,
+    0,
+    0,
+    0.2126,
+    0.7152,
+    0.0722,
+    0,
+    0,
+    0.2126,
+    0.7152,
+    0.0722,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
   ]);
   final _identityFilter = ColorFilter.matrix(<double>[
-    1, 0, 0, 0, 0,
-    0, 1, 0, 0, 0,
-    0, 0, 1, 0, 0,
-    0, 0, 0, 1, 0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    1,
+    0,
   ]);
 
   @override
@@ -115,6 +150,12 @@ class _QuizState extends State<Quiz> {
         await dir.create(recursive: true);
       }
     });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    globals.soundManager.stopAudioService(callOnStop: false);
   }
 
   @override
@@ -134,12 +175,12 @@ class _QuizState extends State<Quiz> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                _instructionButton(),
-                Divider(color: Colors.white),
-                _goal(),
-                _question(),
-                _userAudioSection(),
-              ] +
+                    _instructionButton(),
+                    Divider(color: Colors.white),
+                    _goal(),
+                    _question(),
+                    _userAudioSection(),
+                  ] +
                   _choiceButtons() +
                   [
                     Padding(
@@ -172,10 +213,7 @@ class _QuizState extends State<Quiz> {
             return AlertDialog(
               content: Text(
                 '確認退出？',
-                style: Theme
-                    .of(context)
-                    .textTheme
-                    .headline1,
+                style: Theme.of(context).textTheme.headline1,
               ),
               actions: [
                 ElevatedButton(
@@ -208,10 +246,7 @@ class _QuizState extends State<Quiz> {
     return ExpansionTile(
       initiallyExpanded: true,
       maintainState: true,
-      title: Text('查看指示', style: Theme
-          .of(context)
-          .textTheme
-          .headline5),
+      title: Text('查看指示', style: Theme.of(context).textTheme.headline5),
       children: [_instructionPage()],
     );
   }
@@ -243,10 +278,7 @@ class _QuizState extends State<Quiz> {
       padding: const EdgeInsets.all(10.0),
       child: Text(
         widget.goal + ':',
-        style: Theme
-            .of(context)
-            .textTheme
-            .headline6,
+        style: Theme.of(context).textTheme.headline6,
         textAlign: TextAlign.left,
       ),
     );
@@ -263,10 +295,7 @@ class _QuizState extends State<Quiz> {
           decoration: BoxDecoration(border: Border.all(color: Colors.white)),
           child: Text(
             widget.questions[_questionNumber],
-            style: Theme
-                .of(context)
-                .textTheme
-                .headline5,
+            style: Theme.of(context).textTheme.headline5,
             textAlign: TextAlign.left,
           ),
         ),
@@ -319,14 +348,11 @@ class _QuizState extends State<Quiz> {
               return globals.soundManager.recordAudioButton(
                 file: snapshot.data,
                 style: ElevatedButton.styleFrom(
-                  primary: Theme
-                      .of(context)
-                      .scaffoldBackgroundColor,
+                  primary: Theme.of(context).scaffoldBackgroundColor,
                 ),
                 child: SizedBox(
                   child: ColorFiltered(
-                    colorFilter: disable
-                        ? _greyscaleFilter : _identityFilter,
+                    colorFilter: disable ? _greyscaleFilter : _identityFilter,
                     child: Image.asset('assets/images/recorder_button.png'),
                   ),
                   height: 50.0,
@@ -440,36 +466,35 @@ class _QuizState extends State<Quiz> {
     return widget.type == QuizType.AUDIO
         ? []
         : widget.choices[_questionNumber]
-        .map(
-          (choice) =>
-          Padding(
-            padding: EdgeInsets.zero,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                primary: choice == _userInputs[_questionNumber]
-                    ? Colors.purple
-                    : Colors.lightBlue,
-                minimumSize: const Size(350.0, 35.0),
-                shape: const RoundedRectangleBorder(
-                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
+            .map(
+              (choice) => Padding(
+                padding: EdgeInsets.zero,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    primary: choice == _userInputs[_questionNumber]
+                        ? Colors.purple
+                        : Colors.lightBlue,
+                    minimumSize: const Size(350.0, 35.0),
+                    shape: const RoundedRectangleBorder(
+                      borderRadius: BorderRadius.all(Radius.circular(15.0)),
+                    ),
+                    side: BorderSide(color: Colors.white54, width: 3.0),
+                  ),
+                  onPressed: () async {
+                    if (_userInputs[_questionNumber].isEmpty) {
+                      setState(() {
+                        _noOfQuestionsFilled++;
+                      });
+                    }
+                    setState(() {
+                      _userInputs[_questionNumber] = choice;
+                    });
+                  },
+                  child: Text(choice),
                 ),
-                side: BorderSide(color: Colors.white54, width: 3.0),
               ),
-              onPressed: () async {
-                if (_userInputs[_questionNumber].isEmpty) {
-                  setState(() {
-                    _noOfQuestionsFilled++;
-                  });
-                }
-                setState(() {
-                  _userInputs[_questionNumber] = choice;
-                });
-              },
-              child: Text(choice),
-            ),
-          ),
-    )
-        .toList(); // choices
+            )
+            .toList(); // choices
   }
 
   Widget _prevQuestionButton() {
@@ -510,10 +535,7 @@ class _QuizState extends State<Quiz> {
               return AlertDialog(
                 content: Text(
                   '確認遞交？',
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .headline1,
+                  style: Theme.of(context).textTheme.headline1,
                 ),
                 actions: [
                   ElevatedButton(
@@ -542,33 +564,31 @@ class _QuizState extends State<Quiz> {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                McSummaryPage(
-                                  UserResult(
-                                    name: currentUserInfo.name,
-                                    dateOfBirth: currentUserInfo.dateOfBirth,
-                                    gender: currentUserInfo.gender,
-                                    testName: widget.title,
-                                    score: score,
-                                    testLength: widget.length,
-                                  ),
-                                ),
+                            builder: (_) => McSummaryPage(
+                              UserResult(
+                                name: currentUserInfo.name,
+                                dateOfBirth: currentUserInfo.dateOfBirth,
+                                gender: currentUserInfo.gender,
+                                testName: widget.title,
+                                score: score,
+                                testLength: widget.length,
+                              ),
+                            ),
                           ),
                         );
                       } else {
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (_) =>
-                                AudioSummaryPage(
-                                  UserResult(
-                                    name: currentUserInfo.name,
-                                    dateOfBirth: currentUserInfo.dateOfBirth,
-                                    gender: currentUserInfo.gender,
-                                    testName: widget.title,
-                                    testLength: widget.length,
-                                  ),
-                                ),
+                            builder: (_) => AudioSummaryPage(
+                              UserResult(
+                                name: currentUserInfo.name,
+                                dateOfBirth: currentUserInfo.dateOfBirth,
+                                gender: currentUserInfo.gender,
+                                testName: widget.title,
+                                testLength: widget.length,
+                              ),
+                            ),
                           ),
                         );
                       }
@@ -585,10 +605,7 @@ class _QuizState extends State<Quiz> {
               return AlertDialog(
                 content: Text(
                   '請先完成所有題目',
-                  style: Theme
-                      .of(context)
-                      .textTheme
-                      .headline1,
+                  style: Theme.of(context).textTheme.headline1,
                 ),
                 actions: [
                   ElevatedButton(
@@ -633,11 +650,11 @@ class _QuizState extends State<Quiz> {
     return widget.images == null
         ? Container()
         : Padding(
-      padding: EdgeInsets.all(10.0),
-      child: Image.asset(
-        'assets/images/${widget.images[_questionNumber]}',
-      ),
-    );
+            padding: EdgeInsets.all(10.0),
+            child: Image.asset(
+              'assets/images/${widget.images[_questionNumber]}',
+            ),
+          );
   }
 
   void _getButtonStates() {

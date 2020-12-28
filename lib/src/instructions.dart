@@ -73,11 +73,11 @@ class _InstructionPageState extends State<InstructionPage> {
                             child: Text("播放指示"),
                             onPressed: () {
                               getButtonStates();
-                              widget.onPressed();
+                              widget.onPressed?.call();
                             },
                             onStop: () {
                               getButtonStates();
-                              widget.onStop();
+                              widget.onStop?.call();
                             },
                             disable: widget.disable || _isUsingAudioService,
                           ),

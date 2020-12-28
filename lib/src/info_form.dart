@@ -20,6 +20,12 @@ class _InformationFormState extends State<InformationForm> {
   bool _userGenderWarning = false;
 
   @override
+  void dispose() {
+    super.dispose();
+    globals.soundManager.stopAudioService(callOnStop: false);
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: GestureDetector(
@@ -205,7 +211,6 @@ class _InformationFormState extends State<InformationForm> {
           actions: [
             ElevatedButton(
               onPressed: () async {
-                await globals.soundManager.stopAudioService();
                 Navigator.pop(context);
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/');

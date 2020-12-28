@@ -48,7 +48,7 @@ class SoundManager {
     _timerSubscription?.resume();
   }
 
-  Future<void> stopAudioService() async {
+  Future<void> stopAudioService({bool callOnStop: true}) async {
     _playerSubscription?.cancel();
     _timerSubscription?.cancel();
 
@@ -58,8 +58,11 @@ class SoundManager {
     await _audioPlayer.stopPlayer();
     await _audioRecorder.stopRecorder();
 
-    _playerOnStop?.call();
-    _recorderOnStop?.call();
+    if (callOnStop) {
+      _playerOnStop?.call();
+      _recorderOnStop?.call();
+    }
+
     _playerOnStop = null;
     _recorderOnStop = null;
   }
