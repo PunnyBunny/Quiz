@@ -17,6 +17,8 @@ enum QuizType {
   AUDIO,
   @JsonValue("mc")
   MULTIPLE_CHOICE,
+  @JsonValue("instruction")
+  INSTRUCTION,
 }
 
 @JsonSerializable()
@@ -463,38 +465,45 @@ class _QuizState extends State<Quiz> {
   }
 
   List<Widget> _choiceButtons() {
-    return widget.type == QuizType.AUDIO
-        ? []
-        : widget.choices[_questionNumber]
-            .map(
-              (choice) => Padding(
-                padding: EdgeInsets.zero,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    primary: choice == _userInputs[_questionNumber]
-                        ? Colors.purple
-                        : Colors.lightBlue,
-                    minimumSize: const Size(350.0, 35.0),
-                    shape: const RoundedRectangleBorder(
-                      borderRadius: BorderRadius.all(Radius.circular(15.0)),
-                    ),
-                    side: BorderSide(color: Colors.white54, width: 3.0),
-                  ),
-                  onPressed: () async {
-                    if (_userInputs[_questionNumber].isEmpty) {
-                      setState(() {
-                        _noOfQuestionsFilled++;
-                      });
-                    }
-                    setState(() {
-                      _userInputs[_questionNumber] = choice;
-                    });
-                  },
-                  child: Text(choice),
+    if (widget.type == QuizType.AUDIO) {
+      return [];
+    } else {
+      var choices = <Widget>[];
+      for (int i = 0; i < widget.choices[_questionNumber].length; ++i) {
+        final choice = widget.choices[_questionNumber][i];
+        choices.add(
+          Padding(
+            padding: EdgeInsets.zero,
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                primary: choice == _userInputs[_questionNumber]
+                    ? Colors.purple
+                    : Colors.lightBlue,
+                minimumSize: const Size(350.0, 35.0),
+                shape: const RoundedRectangleBorder(
+                  borderRadius: BorderRadius.all(Radius.circular(15.0)),
                 ),
+                side: BorderSide(color: Colors.white54, width: 3.0),
               ),
-            )
-            .toList(); // choices
+              onPressed: () async {
+                if (_userInputs[_questionNumber].isEmpty) {
+                  setState(() {
+                    _noOfQuestionsFilled++;
+                  });
+                }
+                setState(() {
+                  _userInputs[_questionNumber] = choice;
+                });
+              },
+
+              // ascii code of 'A' is 65
+              child: Text('${String.fromCharCode(i + 65)}. $choice'),
+            ),
+          ),
+        );
+      }
+      return choices;
+    } // choices
   }
 
   Widget _prevQuestionButton() {
