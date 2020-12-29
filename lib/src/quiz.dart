@@ -17,8 +17,6 @@ enum QuizType {
   AUDIO,
   @JsonValue("mc")
   MULTIPLE_CHOICE,
-  @JsonValue("instruction")
-  INSTRUCTION,
 }
 
 @JsonSerializable()

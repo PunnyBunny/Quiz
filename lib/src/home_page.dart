@@ -44,7 +44,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                     _instructionButton(),
                     Divider(color: Colors.white),
-                    Text('請依次序選擇一個測試',
+                    Text('請依次序完成各部分',
                         style: Theme.of(context).textTheme.headline4),
                   ] +
                   buttons,
