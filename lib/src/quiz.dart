@@ -317,7 +317,7 @@ class _QuizState extends State<Quiz> {
                 style: ElevatedButton.styleFrom(
                   primary: disable ? Colors.blueGrey : Colors.blue,
                 ),
-                child: Text("播放問題"),
+                child: Text("播放題目"),
                 onPressed: () {
                   _getButtonStates();
                   setState(() {
