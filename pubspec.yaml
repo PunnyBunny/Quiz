@@ -31,10 +31,10 @@ flutter:
     - assets/images/
     - assets/audios/A/
     - assets/audios/B/
-    - assets/audios/C/1/
-    - assets/audios/C/2/
+    - assets/audios/C/
     - assets/audios/D/
     - assets/audios/E/
-    - assets/audios/F/
+    - assets/audios/F/1/
+    - assets/audios/F/2/
     - assets/audios/instructions/
     - assets/data.json
