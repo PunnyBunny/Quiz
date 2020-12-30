@@ -63,6 +63,8 @@ class AudioSummaryPage extends StatelessWidget {
             globals.dateFormatter.format(_result.dateOfBirth)
         ..fields['gender'] = _result.gender
         ..fields['test_name'] = _result.testName
+        ..fields['school_name'] = _result.schoolName
+        ..fields['grade_level'] = _result.gradeLevel
         ..fields['length'] = '${_result.testLength}'
         ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
       final response = await request.send().timeout(Duration(seconds: 5));

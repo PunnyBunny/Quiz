@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
@@ -141,8 +143,8 @@ class _QuizState extends State<Quiz> {
   void initState() {
     super.initState();
     _userInputs = List<String>.filled(widget.length, '', growable: true);
-    _instructionAudioManagers =
-        List<AudioManager>.generate(widget.instructions.length, (_) => AudioManager());
+    _instructionAudioManagers = List<AudioManager>.generate(
+        widget.instructions.length, (_) => AudioManager());
     globals.userAudioDirectory.then((dir) async {
       if (await dir.exists()) {
         await dir.delete(recursive: true);
@@ -517,6 +519,7 @@ class _QuizState extends State<Quiz> {
   Widget _submitButton() {
     final disable = _noOfQuestionsFilled != widget.length ||
         _userAudioManager.isUsingAudioService;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         primary: disable ? Colors.blueGrey : Colors.green,
@@ -549,9 +552,43 @@ class _QuizState extends State<Quiz> {
                     style: ElevatedButton.styleFrom(
                       primary: Colors.transparent,
                     ),
-                    onPressed: () {
+                    onPressed: () async {
                       Navigator.pop(context);
-                      if (widget.type == QuizType.MULTIPLE_CHOICE) {
+                      bool connectedToInternet = false;
+                      try {
+                        final result = await InternetAddress.lookup(
+                                "example.com") // test connection
+                            .timeout(Duration(seconds: 5));
+                        if (result.isNotEmpty &&
+                            result[0].rawAddress.isNotEmpty) {
+                          connectedToInternet = true;
+                        }
+                      } on SocketException catch (_) {}
+
+                      if (!connectedToInternet) {
+                        showDialog(
+                          context: context,
+                          builder: (context) {
+                            return AlertDialog(
+                              content: Text(
+                                '未連接到網絡',
+                                style: Theme.of(context).textTheme.headline1,
+                              ),
+                              actions: [
+                                ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    primary: Colors.transparent,
+                                  ),
+                                  onPressed: () {
+                                    Navigator.pop(context);
+                                  },
+                                  child: Text('好'),
+                                )
+                              ],
+                            );
+                          },
+                        );
+                      } else if (widget.type == QuizType.MULTIPLE_CHOICE) {
                         int score = 0;
                         for (int i = 0; i < widget.length; ++i) {
                           if (_userInputs[i] == widget.correctAnswers[i]) {
@@ -569,6 +606,8 @@ class _QuizState extends State<Quiz> {
                                 testName: widget.title,
                                 score: score,
                                 testLength: widget.length,
+                                schoolName: currentUserInfo.schoolName,
+                                gradeLevel: currentUserInfo.gradeLevel,
                               ),
                             ),
                           ),
@@ -584,6 +623,8 @@ class _QuizState extends State<Quiz> {
                                 gender: currentUserInfo.gender,
                                 testName: widget.title,
                                 testLength: widget.length,
+                                schoolName: currentUserInfo.schoolName,
+                                gradeLevel: currentUserInfo.gradeLevel,
                               ),
                             ),
                           ),
