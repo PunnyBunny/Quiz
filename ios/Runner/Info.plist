@@ -4,8 +4,6 @@
 <dict>
     <key>NSMicrophoneUsageDescription</key>
     <string>to record audio</string>
-    <key>LSMinimumSystemVersion</key>
-    <string>9.0.0</string>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
