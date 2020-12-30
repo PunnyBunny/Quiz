@@ -187,7 +187,7 @@ class _InformationFormState extends State<InformationForm> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
           primary: Colors.green,
         ),
-        child: Text('遞交', style: Theme.of(context).textTheme.headline2),
+        child: Text('遞交', style: Theme.of(context).textTheme.headline4),
         onPressed: () async {
           setState(() {
             _nameWarning = _name == null;
