@@ -11,13 +11,19 @@ class InformationForm extends StatefulWidget {
 }
 
 class _InformationFormState extends State<InformationForm> {
-  String _userName = '';
-  DateTime _userDateOfBirth = DateTime.now();
-  String _userGender = '';
+  final DateTime _today = DateTime.now();
 
-  bool _userNameWarning = false;
-  bool _userDateOfBirthWarning = false;
-  bool _userGenderWarning = false;
+  String _name;
+  String _schoolName;
+  String _gradeLevel;
+  DateTime _dateOfBirth = DateTime.now();
+  String _gender;
+
+  bool _nameWarning = false;
+  bool _schoolNameWarning = false;
+  bool _gradeLevelWarning = false;
+  bool _dateOfBirthWarning = false;
+  bool _genderWarning = false;
 
   @override
   void dispose() {
@@ -42,6 +48,8 @@ class _InformationFormState extends State<InformationForm> {
                 Divider(color: Colors.white),
                 Text('請填寫基本資料', style: Theme.of(context).textTheme.headline4),
                 _nameField(),
+                _schoolNameField(),
+                _gradeLevelField(),
                 _dateOfBirthField(),
                 _genderField(),
                 _submitButton(),
@@ -62,11 +70,55 @@ class _InformationFormState extends State<InformationForm> {
         },
         onChanged: (name) {
           setState(() {
-            _userName = name;
+            _name = name;
           });
         },
         decoration: InputDecoration(
           hintText: '姓名',
+          hintStyle: Theme.of(context).textTheme.headline6,
+          border: OutlineInputBorder(),
+        ),
+      ),
+    );
+  }
+
+  Widget _gradeLevelField() {
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: DropdownButton(
+        value: _gradeLevel,
+        hint: Text('就讀年級', style: Theme.of(context).textTheme.headline6),
+        items: [
+          DropdownMenuItem(value: 's1', child: Text('中一')),
+          DropdownMenuItem(value: 's2', child: Text('中二')),
+          DropdownMenuItem(value: 's3', child: Text('中三')),
+          DropdownMenuItem(value: 's4', child: Text('中四')),
+          DropdownMenuItem(value: 's5', child: Text('中五')),
+          DropdownMenuItem(value: 's6', child: Text('中六')),
+        ],
+        onChanged: (value) {
+          setState(() {
+            _gradeLevel = value;
+          });
+        },
+      ),
+    );
+  }
+
+  Widget _schoolNameField() {
+    return Padding(
+      padding: EdgeInsets.all(8.0),
+      child: TextField(
+        onEditingComplete: () {
+          FocusScope.of(context).unfocus();
+        },
+        onChanged: (name) {
+          setState(() {
+            _schoolName = name;
+          });
+        },
+        decoration: InputDecoration(
+          hintText: '就讀學校',
           hintStyle: Theme.of(context).textTheme.headline6,
           border: OutlineInputBorder(),
         ),
@@ -79,26 +131,27 @@ class _InformationFormState extends State<InformationForm> {
       padding: EdgeInsets.all(8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(2.0)),
-          side: BorderSide(color: Colors.white, width: 1.0),
-          minimumSize: Size(double.infinity, 60.0),
-          primary: Colors.transparent,
+          minimumSize: Size(200.0, 60.0),
+          primary: Colors.lightBlue,
         ),
         child: Text(
-          '出生日期: ' + globals.dateFormatter.format(_userDateOfBirth),
+          '出生日期: ' +
+              (globals.dateFormatter.format(_dateOfBirth) ==
+                      globals.dateFormatter.format(_today)
+                  ? '請選擇'
+                  : globals.dateFormatter.format(_dateOfBirth)),
           style: Theme.of(context).textTheme.headline6,
         ),
         onPressed: () async {
           final DateTime picked = await showDatePicker(
             context: context,
-            initialDate: _userDateOfBirth,
+            initialDate: _dateOfBirth,
             firstDate: DateTime(1960),
-            lastDate: DateTime.now(),
+            lastDate: _today,
           );
-          if (picked != null && picked != _userDateOfBirth) {
+          if (picked != null) {
             setState(() {
-              _userDateOfBirth = picked;
+              _dateOfBirth = picked;
             });
           }
         },
@@ -110,7 +163,7 @@ class _InformationFormState extends State<InformationForm> {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: DropdownButton(
-        value: _userGender.isEmpty ? null : _userGender,
+        value: _gender,
         hint: Text('性別', style: Theme.of(context).textTheme.headline6),
         items: [
           DropdownMenuItem(value: 'm', child: Text('男')),
@@ -118,7 +171,7 @@ class _InformationFormState extends State<InformationForm> {
         ],
         onChanged: (value) {
           setState(() {
-            _userGender = value;
+            _gender = value;
           });
         },
       ),
@@ -137,18 +190,25 @@ class _InformationFormState extends State<InformationForm> {
         child: Text('遞交', style: Theme.of(context).textTheme.headline2),
         onPressed: () async {
           setState(() {
-            _userNameWarning = _userName.isEmpty;
-            _userDateOfBirthWarning =
-                globals.dateFormatter.format(_userDateOfBirth) ==
-                    globals.dateFormatter.format(DateTime.now());
-            _userGenderWarning = _userGender.isEmpty;
+            _nameWarning = _name == null;
+            _dateOfBirthWarning = _dateOfBirth == _today;
+            _genderWarning = _gender == null;
+            _gradeLevelWarning = _gradeLevel == null;
+            _schoolNameWarning = _schoolName == null;
           });
-          if (!_userNameWarning &&
-              !_userDateOfBirthWarning &&
-              !_userGenderWarning) {
+          if (!_nameWarning &&
+              !_dateOfBirthWarning &&
+              !_genderWarning &&
+              !_gradeLevelWarning &&
+              !_schoolNameWarning) {
             // all information is correctly filed
-            currentUserInfo =
-                UserInfo(_userName, _userDateOfBirth, _userGender);
+            currentUserInfo = UserInfo(
+              name: _name,
+              dateOfBirth: _dateOfBirth,
+              gender: _gender,
+              schoolName: _schoolName,
+              gradeLevel: _gradeLevel,
+            );
             _confirm();
           } else {
             _alert();
@@ -181,9 +241,9 @@ class _InformationFormState extends State<InformationForm> {
       builder: (context) {
         return AlertDialog(
           content: Text(
-            '${_userNameWarning ? '請填寫姓名\n' : ''}'
-            '${_userDateOfBirthWarning ? '請填寫出生日期\n' : ''}'
-            '${_userGenderWarning ? '請填寫性別\n' : ''}',
+            '${_nameWarning ? '請填寫姓名\n' : ''}'
+            '${_dateOfBirthWarning ? '請填寫出生日期\n' : ''}'
+            '${_genderWarning ? '請填寫性別\n' : ''}',
             style: Theme.of(context).textTheme.headline1,
           ),
           actions: [
