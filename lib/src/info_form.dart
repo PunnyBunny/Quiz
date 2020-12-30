@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
+import 'audio_manager.dart';
 import 'globals.dart';
 import 'instructions.dart';
 import 'user_info.dart';
@@ -25,11 +26,7 @@ class _InformationFormState extends State<InformationForm> {
   bool _dateOfBirthWarning = false;
   bool _genderWarning = false;
 
-  @override
-  void dispose() {
-    super.dispose();
-    globals.soundManager.stopAudioService(callOnStop: false);
-  }
+  final _audioManager = AudioManager();
 
   @override
   Widget build(BuildContext context) {
@@ -44,7 +41,7 @@ class _InformationFormState extends State<InformationForm> {
               mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                _instructionButton(),
+                _instructionTile(),
                 Divider(color: Colors.white),
                 Text('請填寫基本資料', style: Theme.of(context).textTheme.headline4),
                 _nameField(),
@@ -221,12 +218,13 @@ class _InformationFormState extends State<InformationForm> {
   Widget _instructionPage() {
     return InstructionPage(
       instruction: '請填上基本資料',
-      assetFilePath: 'assets/audios/instructions',
-      filename: 'info_form.mp3',
+      audioAssetFilePath: 'assets/audios/instructions',
+      audioFilename: 'info_form.mp3',
+      audioManager: _audioManager,
     );
   }
 
-  Widget _instructionButton() {
+  Widget _instructionTile() {
     return ExpansionTile(
       initiallyExpanded: true,
       title: Text('查看指示', style: Theme.of(context).textTheme.headline5),
@@ -271,7 +269,6 @@ class _InformationFormState extends State<InformationForm> {
           actions: [
             ElevatedButton(
               onPressed: () async {
-                Navigator.pop(context);
                 Navigator.pop(context);
                 Navigator.pushNamed(context, '/');
               },

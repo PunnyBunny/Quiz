@@ -4,7 +4,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_sound/flutter_sound.dart';
 
-class SoundManager {
+class AudioManager {
   var _audioPlayer = FlutterSoundPlayer();
   var _audioRecorder = FlutterSoundRecorder();
 
@@ -18,6 +18,15 @@ class SoundManager {
   bool isPausingAudioService = false;
 
   Function() _recorderOnStop, _playerOnStop;
+
+  AudioManager() {
+    init();
+  }
+
+  Future<void> dispose() async {
+    await _audioPlayer.closeAudioSession();
+    await _audioRecorder.closeAudioSession();
+  }
 
   Future<void> init() async {
     _audioPlayer = await FlutterSoundPlayer().openAudioSession();

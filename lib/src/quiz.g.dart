@@ -25,7 +25,7 @@ Quiz _$QuizFromJson(Map<String, dynamic> json) {
     'title',
     'type',
     'length',
-    'instruction',
+    'instructions',
     'goal',
     'audios',
     'questions'
@@ -42,9 +42,10 @@ Quiz _$QuizFromJson(Map<String, dynamic> json) {
         ?.toList(),
     (json['correctAnswers'] as List)?.map((e) => e as String)?.toList(),
     (json['images'] as List)?.map((e) => e as String)?.toList(),
-    json['instruction'] == null
-        ? null
-        : Instruction.fromJson(json['instruction'] as Map<String, dynamic>),
+    (json['instructions'] as List)
+        ?.map((e) =>
+            e == null ? null : Instruction.fromJson(e as Map<String, dynamic>))
+        ?.toList(),
   );
 }
 
@@ -52,7 +53,7 @@ Map<String, dynamic> _$QuizToJson(Quiz instance) => <String, dynamic>{
       'title': instance.title,
       'type': _$QuizTypeEnumMap[instance.type],
       'length': instance.length,
-      'instruction': instance.instruction,
+      'instructions': instance.instructions,
       'goal': instance.goal,
       'audios': instance.audios,
       'questions': instance.questions,

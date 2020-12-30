@@ -1,24 +1,27 @@
 import 'package:flutter/material.dart';
 
+import 'audio_manager.dart';
 import 'globals.dart';
 
 class InstructionPage extends StatefulWidget {
   final String instruction;
-  final String assetFilePath;
-  final String filename;
+  final String audioAssetFilePath;
+  final String audioFilename;
+  final AudioManager audioManager;
   final void Function() onPressed;
   final void Function() onStop;
   final bool disable;
 
-  const InstructionPage(
-      {Key key,
-      this.instruction,
-      this.assetFilePath,
-      this.filename,
-      this.onPressed,
-      this.onStop,
-      this.disable: false})
-      : super(key: key);
+  const InstructionPage({
+    Key key,
+    @required this.instruction,
+    @required this.audioAssetFilePath,
+    @required this.audioFilename,
+    @required this.audioManager,
+    this.onPressed,
+    this.onStop,
+    this.disable: false,
+  }) : super(key: key);
 
   @override
   _InstructionPageState createState() => _InstructionPageState();
@@ -32,8 +35,8 @@ class _InstructionPageState extends State<InstructionPage> {
   Widget build(BuildContext context) {
     void getButtonStates() {
       setState(() {
-        _isUsingAudioService = globals.soundManager.isUsingAudioService;
-        _isPausingAudioService = globals.soundManager.isPausingAudioService;
+        _isUsingAudioService = widget.audioManager.isUsingAudioService;
+        _isPausingAudioService = widget.audioManager.isPausingAudioService;
       });
       widget.onPressed?.call();
     }
@@ -41,8 +44,8 @@ class _InstructionPageState extends State<InstructionPage> {
     return FutureBuilder(
         future: globals.loadFromAssets(
             context: context,
-            assetFilePath: widget.assetFilePath,
-            filename: widget.filename),
+            assetFilePath: widget.audioAssetFilePath,
+            filename: widget.audioFilename),
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return Padding(
@@ -56,14 +59,15 @@ class _InstructionPageState extends State<InstructionPage> {
                     _title(),
                     Padding(
                       padding: const EdgeInsets.all(8.0),
-                      child: Text(widget.instruction, textAlign: TextAlign.left),
+                      child:
+                          Text(widget.instruction, textAlign: TextAlign.left),
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: globals.soundManager.playAudioButton(
+                          child: widget.audioManager.playAudioButton(
                             file: snapshot.data,
                             style: ElevatedButton.styleFrom(
                               primary: widget.disable || _isUsingAudioService
@@ -84,7 +88,7 @@ class _InstructionPageState extends State<InstructionPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: globals.soundManager.stopAudioButton(
+                          child: widget.audioManager.stopAudioButton(
                             style: ElevatedButton.styleFrom(
                               primary: _isUsingAudioService
                                   ? Colors.red
@@ -101,7 +105,7 @@ class _InstructionPageState extends State<InstructionPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: globals.soundManager.pauseAudioServiceButton(
+                          child: widget.audioManager.pauseAudioServiceButton(
                             style: ElevatedButton.styleFrom(
                               primary: _isPausingAudioService ||
                                       !_isUsingAudioService
@@ -116,7 +120,7 @@ class _InstructionPageState extends State<InstructionPage> {
                         ),
                         Padding(
                           padding: const EdgeInsets.all(8.0),
-                          child: globals.soundManager.resumeAudioServiceButton(
+                          child: widget.audioManager.resumeAudioServiceButton(
                             style: ElevatedButton.styleFrom(
                               primary: !_isPausingAudioService ||
                                       !_isUsingAudioService

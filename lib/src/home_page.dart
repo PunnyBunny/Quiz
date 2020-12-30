@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:quiz/src/globals.dart';
 import 'package:random_color/random_color.dart';
 
+import 'audio_manager.dart';
 import 'instructions.dart';
 import 'quiz.dart';
 
@@ -11,7 +11,8 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  final RandomColor _randomColor = RandomColor();
+  final _randomColor = RandomColor();
+  final _audioManager = AudioManager();
 
   @override
   Widget build(BuildContext context) {
@@ -25,7 +26,7 @@ class _HomePageState extends State<HomePage> {
             color: _randomColor.randomColor(
                 colorHue: ColorHue.blue, colorBrightness: ColorBrightness.dark),
             action: () async {
-              await globals.soundManager.stopAudioService();
+              await _audioManager.stopAudioService();
               await Navigator.push(
                   context, MaterialPageRoute(builder: (context) => quiz));
             },
@@ -42,7 +43,7 @@ class _HomePageState extends State<HomePage> {
               crossAxisAlignment: CrossAxisAlignment.center,
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
-                    _instructionButton(),
+                    _instructionTile(),
                     Divider(color: Colors.white),
                     Text('請依次序完成各部分',
                         style: Theme.of(context).textTheme.headline4),
@@ -76,7 +77,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _instructionButton() {
+  Widget _instructionTile() {
     return ExpansionTile(
       initiallyExpanded: true,
       maintainState: true,
@@ -87,9 +88,10 @@ class _HomePageState extends State<HomePage> {
 
   Widget _instructionPage() {
     return InstructionPage(
-      instruction: '請按次序，逐一完成六個部分。',
-      assetFilePath: 'assets/audios/instructions',
-      filename: 'home_page.mp3',
+      instruction: '請依次序完成各部分。',
+      audioAssetFilePath: 'assets/audios/instructions',
+      audioFilename: 'home_page.mp3',
+      audioManager: _audioManager,
     );
   }
 }

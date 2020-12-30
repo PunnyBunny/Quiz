@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import 'audio_manager.dart';
 import 'audio_summary.dart';
 import 'globals.dart';
 import 'instructions.dart';
@@ -47,7 +48,7 @@ class Quiz extends StatefulWidget {
       this.choices,
       this.correctAnswers,
       this.images,
-      this.instruction);
+      this.instructions);
 
   factory Quiz.fromJson(Map<String, dynamic> json) => _$QuizFromJson(json);
 
@@ -63,7 +64,7 @@ class Quiz extends StatefulWidget {
   final int length;
 
   @JsonKey(required: true)
-  final Instruction instruction;
+  final List<Instruction> instructions;
 
   @JsonKey(required: true, nullable: false)
   final String goal;
@@ -88,13 +89,9 @@ class _QuizState extends State<Quiz> {
   List<String> _userInputs;
   int _noOfQuestionsFilled = 0;
 
-  bool _isUsingAudioService = false;
-  bool _isPausingAudioService = false;
+  List<AudioManager> _instructionAudioManagers;
+  AudioManager _userAudioManager = AudioManager();
 
-  bool _isPlayingInstructions = false;
-  bool _isPlayingUserAudio = false;
-
-  Widget _timer = globals.soundManager.timer();
   final _greyscaleFilter = ColorFilter.matrix(<double>[
     0.2126,
     0.7152,
@@ -144,6 +141,8 @@ class _QuizState extends State<Quiz> {
   void initState() {
     super.initState();
     _userInputs = List<String>.filled(widget.length, '', growable: true);
+    _instructionAudioManagers =
+        List<AudioManager>.generate(widget.instructions.length, (_) => AudioManager());
     globals.userAudioDirectory.then((dir) async {
       if (await dir.exists()) {
         await dir.delete(recursive: true);
@@ -155,7 +154,10 @@ class _QuizState extends State<Quiz> {
   @override
   void dispose() {
     super.dispose();
-    globals.soundManager.stopAudioService(callOnStop: false);
+    _instructionAudioManagers.forEach((manager) {
+      manager.dispose();
+    });
+    _userAudioManager.dispose();
   }
 
   @override
@@ -175,7 +177,7 @@ class _QuizState extends State<Quiz> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
-                    _instructionButton(),
+                    _instructionsTile(),
                     Divider(color: Colors.white),
                     _goal(),
                     _question(),
@@ -242,34 +244,30 @@ class _QuizState extends State<Quiz> {
     );
   }
 
-  Widget _instructionButton() {
+  Widget _instructionsTile() {
     return ExpansionTile(
       initiallyExpanded: true,
       maintainState: true,
       title: Text('查看指示', style: Theme.of(context).textTheme.headline5),
-      children: [_instructionPage()],
+      children: List<int>.generate(widget.instructions.length, (index) => index)
+          .map((index) => _instructionPage(index))
+          .toList(),
     );
   }
 
-  Widget _instructionPage() {
-    final lastSlashIndex = widget.instruction.audio.lastIndexOf('/');
+  Widget _instructionPage(int index) {
+    final instruction = widget.instructions[index];
+    final lastSlashIndex = instruction.audio.lastIndexOf('/');
+    final disable = _instructionAudioManagers[index].isPausingAudioService;
     return InstructionPage(
-      instruction: widget.instruction.text,
-      assetFilePath: 'assets/audios/' +
-          widget.instruction.audio.substring(0, lastSlashIndex),
-      filename: widget.instruction.audio.substring(lastSlashIndex + 1),
-      onPressed: () {
-        setState(() {
-          _isPlayingInstructions = true;
-        });
-      },
-      onStop: () {
-        setState(() {
-          _isPlayingInstructions = false;
-        });
-        _getButtonStates();
-      },
-      disable: _isPlayingUserAudio,
+      instruction: instruction.text,
+      audioAssetFilePath:
+          'assets/audios/' + instruction.audio.substring(0, lastSlashIndex),
+      audioFilename: instruction.audio.substring(lastSlashIndex + 1),
+      onPressed: _rebuild,
+      onStop: _rebuild,
+      disable: disable,
+      audioManager: _instructionAudioManagers[index],
     );
   }
 
@@ -310,27 +308,17 @@ class _QuizState extends State<Quiz> {
               assetFilePath: 'assets/audios',
               filename: '${widget.audios[_questionNumber]}'),
           builder: (context, snapshot) {
-            bool disable = _isUsingAudioService || _isPlayingInstructions;
+            bool disable = _userAudioManager.isUsingAudioService;
             if (snapshot.hasData) {
-              return globals.soundManager.playAudioButton(
+              return _userAudioManager.playAudioButton(
                 file: snapshot.data,
                 style: ElevatedButton.styleFrom(
                   primary: disable ? Colors.blueGrey : Colors.blue,
                 ),
                 child: Text("播放題目"),
-                onPressed: () {
-                  _getButtonStates();
-                  setState(() {
-                    _isPlayingUserAudio = true;
-                  });
-                },
-                onStop: () {
-                  _getButtonStates();
-                  setState(() {
-                    _isPlayingUserAudio = false;
-                  });
-                },
-                onTick: _updateTimer,
+                onPressed: _rebuild,
+                onStop: _rebuild,
+                onTick: _rebuild,
                 disable: disable,
               );
             } else {
@@ -344,8 +332,8 @@ class _QuizState extends State<Quiz> {
           future: globals.userAudioPath(_questionNumber),
           builder: (context, snapshot) {
             if (widget.type == QuizType.AUDIO && snapshot.hasData) {
-              bool disable = _isUsingAudioService;
-              return globals.soundManager.recordAudioButton(
+              bool disable = _userAudioManager.isUsingAudioService;
+              return _userAudioManager.recordAudioButton(
                 file: snapshot.data,
                 style: ElevatedButton.styleFrom(
                   primary: Theme.of(context).scaffoldBackgroundColor,
@@ -358,15 +346,15 @@ class _QuizState extends State<Quiz> {
                   height: 50.0,
                   width: 50.0,
                 ),
-                onPressed: _getButtonStates,
+                onPressed: _rebuild,
                 onStop: () {
-                  _getButtonStates();
+                  _rebuild();
                   if (_userInputs[_questionNumber].isEmpty) {
                     _userInputs[_questionNumber] = 'done';
                     ++_noOfQuestionsFilled;
                   }
                 },
-                onTick: _updateTimer,
+                onTick: _rebuild,
                 disable: disable,
               );
             } else {
@@ -380,17 +368,17 @@ class _QuizState extends State<Quiz> {
           future: globals.userAudioPath(_questionNumber),
           builder: (context, snapshot) {
             if (widget.type == QuizType.AUDIO && snapshot.hasData) {
-              bool disable =
-                  _isUsingAudioService || _userInputs[_questionNumber].isEmpty;
-              return globals.soundManager.playAudioButton(
+              bool disable = _userAudioManager.isUsingAudioService ||
+                  _userInputs[_questionNumber].isEmpty;
+              return _userAudioManager.playAudioButton(
                 file: snapshot.data,
                 style: ElevatedButton.styleFrom(
                   primary: disable ? Colors.blueGrey : Colors.blue,
                 ),
                 child: Text("你的答案"),
-                onPressed: _getButtonStates,
-                onStop: _getButtonStates,
-                onTick: _updateTimer,
+                onPressed: _rebuild,
+                onStop: _rebuild,
+                onTick: _rebuild,
                 disable: disable,
               );
             } else {
@@ -400,38 +388,40 @@ class _QuizState extends State<Quiz> {
     }
 
     Widget _stopAudioButton() {
-      final disable = !_isUsingAudioService;
-      return globals.soundManager.stopAudioButton(
+      final disable = !_userAudioManager.isUsingAudioService;
+      return _userAudioManager.stopAudioButton(
         style: ElevatedButton.styleFrom(
           primary: disable ? Colors.blueGrey : Colors.red,
         ),
         child: Text('停止'),
         disable: disable,
-        onPressed: _getButtonStates,
+        onPressed: _rebuild,
       );
     }
 
     Widget _pauseAudioButton() {
-      final disable = (!_isUsingAudioService) || _isPausingAudioService;
-      return globals.soundManager.pauseAudioServiceButton(
+      final disable = !_userAudioManager.isUsingAudioService ||
+          _userAudioManager.isPausingAudioService;
+      return _userAudioManager.pauseAudioServiceButton(
         style: ElevatedButton.styleFrom(
           primary: disable ? Colors.blueGrey : Colors.blue,
         ),
         child: Text('暫停'),
         disable: disable,
-        onPressed: _getButtonStates,
+        onPressed: _rebuild,
       );
     }
 
     Widget _resumeAudioButton() {
-      final disable = (!_isUsingAudioService) || !_isPausingAudioService;
-      return globals.soundManager.resumeAudioServiceButton(
+      final disable = !_userAudioManager.isUsingAudioService ||
+          !_userAudioManager.isPausingAudioService;
+      return _userAudioManager.resumeAudioServiceButton(
         style: ElevatedButton.styleFrom(
           primary: disable ? Colors.blueGrey : Colors.blue,
         ),
         child: Text('繼續'),
         disable: disable,
-        onPressed: _getButtonStates,
+        onPressed: _rebuild,
       );
     }
 
@@ -448,7 +438,7 @@ class _QuizState extends State<Quiz> {
               _playUserAudioButton(),
             ],
           ),
-          _timer,
+          _userAudioManager.timer(),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -505,17 +495,17 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget _prevQuestionButton() {
+    final disable =
+        _questionNumber == 0 || _userAudioManager.isUsingAudioService;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          primary: _questionNumber == 0 || _isUsingAudioService
-              ? Colors.blueGrey
-              : Colors.lightBlue,
+          primary: disable ? Colors.blueGrey : Colors.lightBlue,
         ),
         child: Text('上一題'),
         onPressed: () {
-          if (_questionNumber > 0)
+          if (!disable && _questionNumber > 0)
             setState(() {
               _questionNumber--;
             });
@@ -525,17 +515,17 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget _submitButton() {
+    final disable = _noOfQuestionsFilled != widget.length ||
+        _userAudioManager.isUsingAudioService;
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
-        primary: _noOfQuestionsFilled == widget.length && !_isUsingAudioService
-            ? Colors.green
-            : Colors.blueGrey,
+        primary: disable ? Colors.blueGrey : Colors.green,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         minimumSize: Size(100.0, 50.0),
       ),
       child: Text('遞交'),
       onPressed: () {
-        if (_noOfQuestionsFilled == widget.length) {
+        if (!disable) {
           showDialog(
             context: context,
             builder: (context) {
@@ -605,7 +595,7 @@ class _QuizState extends State<Quiz> {
               );
             },
           );
-        } else {
+        } else if (widget.length != _noOfQuestionsFilled) {
           showDialog(
             context: context,
             builder: (context) {
@@ -634,17 +624,17 @@ class _QuizState extends State<Quiz> {
   }
 
   Widget _nextQuestionButton() {
+    final disable = _questionNumber == widget.length - 1 ||
+        _userAudioManager.isUsingAudioService;
     return Padding(
       padding: const EdgeInsets.all(8.0),
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          primary: _questionNumber == widget.length - 1 || _isUsingAudioService
-              ? Colors.blueGrey
-              : Colors.lightBlue,
+          primary: disable ? Colors.blueGrey : Colors.lightBlue,
         ),
         child: Text('下一題'),
         onPressed: () {
-          if (_questionNumber + 1 < widget.length)
+          if (!disable)
             setState(() {
               _questionNumber++;
             });
@@ -664,16 +654,7 @@ class _QuizState extends State<Quiz> {
           );
   }
 
-  void _getButtonStates() {
-    setState(() {
-      _isUsingAudioService = globals.soundManager.isUsingAudioService;
-      _isPausingAudioService = globals.soundManager.isPausingAudioService;
-    });
-  }
-
-  void _updateTimer() {
-    setState(() {
-      _timer = globals.soundManager.timer();
-    });
+  void _rebuild() {
+    setState(() {});
   }
 }
