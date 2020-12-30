@@ -20,7 +20,7 @@
   <string>com.study.quiz</string>
   <key>CFBundleVersion</key>
   <string>1.0</string>
-  <key>MinimumOSVersion</key>
+  <key>LSMinimumSystemVersion</key>
   <string>13.0</string>
 </dict>
 </plist>
