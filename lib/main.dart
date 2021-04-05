@@ -56,7 +56,7 @@ class MyApp extends StatelessWidget {
   Future<void> init() async {
     WidgetsFlutterBinding.ensureInitialized(); // for using rootBundle
     await SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.portraitUp]); // make user can't rotate screen
+        [DeviceOrientation.portraitUp]); // force portrait
     await SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]); // hide status bar
 
     var statuses = await [

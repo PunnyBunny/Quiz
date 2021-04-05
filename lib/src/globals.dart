@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Globals {
-  final serverUri = 'http://testquiz.hopto.org:5000';
+  final serverUri = 'http://testquiz.hopto.org:8080';
   final dateFormatter = DateFormat('dd-MM-yyyy');
 
   Future<Directory> get localPath async =>

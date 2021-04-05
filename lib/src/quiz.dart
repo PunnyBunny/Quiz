@@ -170,7 +170,6 @@ class _QuizState extends State<Quiz> {
         appBar: AppBar(
           title: Text(
             '${widget.title}: 第 ${_questionNumber + 1}/${widget.length} 題',
-            style: TextStyle(fontSize: 22.0),
           ),
           leading: _backButton(),
         ),
@@ -260,7 +259,6 @@ class _QuizState extends State<Quiz> {
   Widget _instructionPage(int index) {
     final instruction = widget.instructions[index];
     final lastSlashIndex = instruction.audio.lastIndexOf('/');
-    final disable = _instructionAudioManagers[index].isPausingAudioService;
     return InstructionPage(
       instruction: instruction.text,
       audioAssetFilePath:
@@ -268,7 +266,6 @@ class _QuizState extends State<Quiz> {
       audioFilename: instruction.audio.substring(lastSlashIndex + 1),
       onPressed: _rebuild,
       onStop: _rebuild,
-      disable: disable,
       audioManager: _instructionAudioManagers[index],
     );
   }

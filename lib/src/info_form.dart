@@ -43,7 +43,7 @@ class _InformationFormState extends State<InformationForm> {
               children: <Widget>[
                 _instructionTile(),
                 Divider(color: Colors.white),
-                Text('請填寫基本資料', style: Theme.of(context).textTheme.headline4),
+                Text('請填上基本資料', style: Theme.of(context).textTheme.headline4),
                 _nameField(),
                 _schoolNameField(),
                 _gradeLevelField(),
