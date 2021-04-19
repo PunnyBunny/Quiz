@@ -19,6 +19,7 @@
 
         android:name="io.flutter.app.FlutterApplication"
         android:icon="@mipmap/ic_launcher"
+        android:usesCleartextTraffic="true"
         android:label="quiz">
         <activity
             android:name=".MainActivity"
