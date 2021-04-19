@@ -5,9 +5,9 @@ import 'package:flutter/services.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'src/globals.dart';
+import 'src/home_page.dart';
 import 'src/info_form.dart';
 import 'src/quiz.dart';
-import 'src/home_page.dart';
 
 Map<String, Widget Function(BuildContext)> routes = {
   '/info_form': (context) => InformationForm(),
@@ -46,6 +46,17 @@ class MyApp extends StatelessWidget {
             color: Colors.white,
           ),
         ),
+        elevatedButtonTheme: ElevatedButtonThemeData(
+          style: ButtonStyle(
+            minimumSize: MaterialStateProperty.all(Size(0.0, 0.0)),
+            padding: MaterialStateProperty.all(
+              EdgeInsets.symmetric(
+                vertical: 4.0,
+                horizontal: 8.0,
+              ),
+            ),
+          ),
+        ),
         brightness: Brightness.dark,
       ),
       initialRoute: '/info_form',
@@ -57,7 +68,8 @@ class MyApp extends StatelessWidget {
     WidgetsFlutterBinding.ensureInitialized(); // for using rootBundle
     await SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp]); // force portrait
-    await SystemChrome.setEnabledSystemUIOverlays([SystemUiOverlay.bottom]); // hide status bar
+    await SystemChrome.setEnabledSystemUIOverlays(
+        [SystemUiOverlay.bottom]); // hide status bar
 
     var statuses = await [
       Permission.microphone,
