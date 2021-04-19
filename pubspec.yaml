@@ -1,7 +1,8 @@
 name: quiz
 description: HKU Adolescent Language Test
 publish_to: "none"
-version: 1.0.0
+version: 1.0.0+2
+
 
 environment:
   sdk: ">=2.1.0"
