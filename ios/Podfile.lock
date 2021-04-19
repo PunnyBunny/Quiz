@@ -1,0 +1,55 @@
+PODS:
+  - Flutter (1.0.0)
+  - flutter_archive (0.0.1):
+    - Flutter
+    - ZIPFoundation (= 0.9.11)
+  - "flutter_sound (6.4.8+2)":
+    - Flutter
+    - mobile-ffmpeg-audio (= 4.3.1.LTS)
+    - "tau_sound_core (= 6.4.8+2)"
+  - mobile-ffmpeg-audio (4.3.1.LTS)
+  - path_provider (0.0.1):
+    - Flutter
+  - "permission_handler (5.0.1+1)":
+    - Flutter
+  - "tau_sound_core (6.4.8+2)"
+  - ZIPFoundation (0.9.11)
+
+DEPENDENCIES:
+  - Flutter (from `Flutter`)
+  - flutter_archive (from `.symlinks/plugins/flutter_archive/ios`)
+  - flutter_sound (from `.symlinks/plugins/flutter_sound/ios`)
+  - path_provider (from `.symlinks/plugins/path_provider/ios`)
+  - permission_handler (from `.symlinks/plugins/permission_handler/ios`)
+
+SPEC REPOS:
+  trunk:
+    - mobile-ffmpeg-audio
+    - tau_sound_core
+    - ZIPFoundation
+
+EXTERNAL SOURCES:
+  Flutter:
+    :path: Flutter
+  flutter_archive:
+    :path: ".symlinks/plugins/flutter_archive/ios"
+  flutter_sound:
+    :path: ".symlinks/plugins/flutter_sound/ios"
+  path_provider:
+    :path: ".symlinks/plugins/path_provider/ios"
+  permission_handler:
+    :path: ".symlinks/plugins/permission_handler/ios"
+
+SPEC CHECKSUMS:
+  Flutter: 434fef37c0980e73bb6479ef766c45957d4b510c
+  flutter_archive: 47fe3c4d4c74c5fb58196c44d5e6369b37acd1dd
+  flutter_sound: 8ab146e2c11ba246e5c1477ff2608a4248cac552
+  mobile-ffmpeg-audio: adc36047b8032bc0f8e5c4e6ab7cb110189d9b37
+  path_provider: abfe2b5c733d04e238b0d8691db0cfd63a27a93c
+  permission_handler: eac8e15b4a1a3fba55b761d19f3f4e6b005d15b6
+  tau_sound_core: 74ffbf8790d019cdd56200ca36038ec117b920c2
+  ZIPFoundation: b1f0de4eed33e74a676f76e12559ab6b75990197
+
+PODFILE CHECKSUM: 348dad678b7cce6be8a224f25af1488a984f0e6a
+
+COCOAPODS: 1.10.1
