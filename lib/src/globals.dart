@@ -9,8 +9,12 @@ class Globals {
   final serverUri = 'http://147.8.17.92:8080';
   final dateFormatter = DateFormat('dd-MM-yyyy');
 
-  Future<Directory> get localPath async =>
-      await getApplicationDocumentsDirectory();
+  Future<Directory> get localPath async {
+    final documentsDirectory = await getApplicationDocumentsDirectory();
+    final resDirectory = Directory('${documentsDirectory.path}/quiz');
+    await resDirectory.create();
+    return resDirectory;
+  }
 
   Future<Directory> get userAudioDirectory async =>
       Directory('${(await localPath).path}/user_recordings');
@@ -29,7 +33,7 @@ class Globals {
     final file = File('${path.path}/$assetFilePath/$filename');
     if (!await file.exists()) {
       await file.create(recursive: true);
-      final data = context == null
+      final data = (context == null)
           ? await rootBundle.load('$assetFilePath/$filename')
           : await DefaultAssetBundle.of(context)
               .load('$assetFilePath/$filename');
