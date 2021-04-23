@@ -6,7 +6,7 @@ import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 
 class Globals {
-  final serverUri = 'http://147.8.17.92:8080';
+  final serverUri = 'https://ec2-52-201-243-236.compute-1.amazonaws.com';
   final dateFormatter = DateFormat('dd-MM-yyyy');
 
   Future<Directory> get localPath async {
