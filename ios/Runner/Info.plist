@@ -2,13 +2,6 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<key>NSExceptionDomains</key>
-	<dict>
-		<key>testquiz.hopto.org</key>
-		<dict/>
-		<key>NSExceptionAllowsInsecureHTTPLoads</key>
-		<true/>
-	</dict>
 	<key>CFBundleDevelopmentRegion</key>
 	<string>$(DEVELOPMENT_LANGUAGE)</string>
 	<key>CFBundleExecutable</key>
@@ -49,7 +42,7 @@
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>they say need add this description</string>
 	<key>NSMicrophoneUsageDescription</key>
-	<string>to record audio</string>
+	<string>For collecting your vocal answers</string>
 	<key>NSMotionUsageDescription</key>
 	<string>they say need add this description</string>
 	<key>NSSpeechRecognitionUsageDescription</key>
@@ -65,9 +58,6 @@
 	<key>UISupportedInterfaceOrientations~ipad</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>
-		<string>UIInterfaceOrientationPortraitUpsideDown</string>
-		<string>UIInterfaceOrientationLandscapeLeft</string>
-		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
 </dict>
 </plist>
