@@ -61,6 +61,7 @@ class McSummaryPage extends StatelessWidget {
         ..fields['length'] = '${result.testLength}';
 
       final response = await request.send();
+      print(response.statusCode);
       assert(response.statusCode == 200);
     });
   }
