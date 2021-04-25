@@ -1,1 +1,1 @@
-find . -type f -name '*.png' -exec xattr -c {} \;
+find .. -type f -name '*.png' -exec xattr -c {} \;
