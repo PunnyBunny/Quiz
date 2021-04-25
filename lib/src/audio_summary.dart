@@ -51,6 +51,7 @@ class AudioSummaryPage extends StatelessWidget {
     _result = result;
     Future.delayed(Duration.zero, () async {
       final zipFile = File('${(await globals.localPath).path}/audios.zip');
+      if (await zipFile.exists()) await zipFile.delete();
       await ZipFile.createFromDirectory(
         sourceDir: await globals.userAudioDirectory,
         zipFile: zipFile,
