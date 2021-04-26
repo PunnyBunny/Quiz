@@ -10,7 +10,7 @@
 .svn/
 
 # ios related
-ios/build/
+ios/build/*
 
 # IntelliJ related
 *.iml
