@@ -8,7 +8,7 @@ class UserResult {
   final String gender;
 
   final String testName;
-  final String schoolName;
+  final String school;
 
   final String gradeLevel;
 
@@ -20,7 +20,7 @@ class UserResult {
     @required this.dateOfBirth,
     @required this.gender,
     @required this.testName,
-    @required this.schoolName,
+    @required this.school,
     @required this.gradeLevel,
     @required this.testLength,
     this.score,

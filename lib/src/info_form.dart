@@ -15,14 +15,20 @@ class InformationForm extends StatefulWidget {
 class _InformationFormState extends State<InformationForm> {
   final DateTime _today = DateTime.now();
 
+  final _nameHint = '姓名';
+  final _schoolHint = '就讀學校';
+  final _gradeLevelHint = '就讀年級';
+  final _dateOfBirthHint = '出生日期';
+  final _genderHint = '性別';
+
   String _name;
-  String _schoolName;
+  String _school;
   String _gradeLevel;
   DateTime _dateOfBirth = DateTime.now();
   String _gender;
 
   bool _nameWarning = false;
-  bool _schoolNameWarning = false;
+  bool _schoolWarning = false;
   bool _gradeLevelWarning = false;
   bool _dateOfBirthWarning = false;
   bool _genderWarning = false;
@@ -46,7 +52,7 @@ class _InformationFormState extends State<InformationForm> {
                 Divider(color: Colors.white),
                 _overallInstruction(),
                 _nameField(),
-                _schoolNameField(),
+                _schoolField(),
                 _gradeLevelField(),
                 _dateOfBirthField(),
                 _genderField(),
@@ -84,7 +90,7 @@ class _InformationFormState extends State<InformationForm> {
           });
         },
         decoration: InputDecoration(
-          hintText: '姓名',
+          hintText: _nameHint,
           hintStyle: Theme.of(context).textTheme.headline6,
           border: OutlineInputBorder(),
         ),
@@ -97,7 +103,10 @@ class _InformationFormState extends State<InformationForm> {
       padding: EdgeInsets.all(8.0),
       child: DropdownButton(
         value: _gradeLevel,
-        hint: Text('就讀年級', style: Theme.of(context).textTheme.headline6),
+        hint: Text(
+          _gradeLevelHint,
+          style: Theme.of(context).textTheme.headline6,
+        ),
         items: [
           DropdownMenuItem(value: 's1', child: Text('中一')),
           DropdownMenuItem(value: 's2', child: Text('中二')),
@@ -115,7 +124,7 @@ class _InformationFormState extends State<InformationForm> {
     );
   }
 
-  Widget _schoolNameField() {
+  Widget _schoolField() {
     return Padding(
       padding: EdgeInsets.all(8.0),
       child: TextField(
@@ -124,11 +133,11 @@ class _InformationFormState extends State<InformationForm> {
         },
         onChanged: (name) {
           setState(() {
-            _schoolName = name;
+            _school = name;
           });
         },
         decoration: InputDecoration(
-          hintText: '就讀學校',
+          hintText: _schoolHint,
           hintStyle: Theme.of(context).textTheme.headline6,
           border: OutlineInputBorder(),
         ),
@@ -145,7 +154,7 @@ class _InformationFormState extends State<InformationForm> {
           primary: Colors.lightBlue,
         ),
         child: Text(
-          '出生日期: ' +
+          '$_dateOfBirthHint: ' +
               (globals.dateFormatter.format(_dateOfBirth) ==
                       globals.dateFormatter.format(_today)
                   ? '請選擇'
@@ -174,7 +183,10 @@ class _InformationFormState extends State<InformationForm> {
       padding: EdgeInsets.all(8.0),
       child: DropdownButton(
         value: _gender,
-        hint: Text('性別', style: Theme.of(context).textTheme.headline6),
+        hint: Text(
+          _genderHint,
+          style: Theme.of(context).textTheme.headline6,
+        ),
         items: [
           DropdownMenuItem(value: 'm', child: Text('男')),
           DropdownMenuItem(value: 'f', child: Text('女')),
@@ -197,26 +209,29 @@ class _InformationFormState extends State<InformationForm> {
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
           primary: Colors.green,
         ),
-        child: Text('遞交', style: Theme.of(context).textTheme.headline4),
+        child: Text(
+          '遞交',
+          style: Theme.of(context).textTheme.headline4,
+        ),
         onPressed: () async {
           setState(() {
             _nameWarning = _name == null;
             _dateOfBirthWarning = _dateOfBirth == _today;
             _genderWarning = _gender == null;
             _gradeLevelWarning = _gradeLevel == null;
-            _schoolNameWarning = _schoolName == null;
+            _schoolWarning = _school == null;
           });
           if (!_nameWarning &&
               !_dateOfBirthWarning &&
               !_genderWarning &&
               !_gradeLevelWarning &&
-              !_schoolNameWarning) {
+              !_schoolWarning) {
             // all information is correctly filed
             currentUserInfo = UserInfo(
               name: _name,
               dateOfBirth: _dateOfBirth,
               gender: _gender,
-              schoolName: _schoolName,
+              school: _school,
               gradeLevel: _gradeLevel,
             );
             _confirm();
@@ -252,9 +267,11 @@ class _InformationFormState extends State<InformationForm> {
       builder: (context) {
         return AlertDialog(
           content: Text(
-            '${_nameWarning ? '請填寫姓名\n' : ''}'
-            '${_dateOfBirthWarning ? '請填寫出生日期\n' : ''}'
-            '${_genderWarning ? '請填寫性別\n' : ''}',
+            '${_nameWarning ? '請填寫$_nameHint\n' : ''}'
+            '${_dateOfBirthWarning ? '請填寫$_dateOfBirthHint\n' : ''}'
+            '${_genderWarning ? '請填寫$_genderHint\n' : ''}'
+            '${_schoolWarning ? '請填寫$_schoolHint\n' : ''}'
+            '${_gradeLevelWarning ? '請填寫$_gradeLevelHint\n' : ''}',
             style: Theme.of(context).textTheme.headline1,
           ),
           actions: [

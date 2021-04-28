@@ -56,7 +56,7 @@ class McSummaryPage extends StatelessWidget {
         ..fields['gender'] = _result.gender
         ..fields['test_name'] = _result.testName
         ..fields['score'] = '${_result.score}'
-        ..fields['school_name'] = _result.schoolName
+        ..fields['school_name'] = _result.school
         ..fields['grade_level'] = _result.gradeLevel
         ..fields['length'] = '${result.testLength}';
 
