@@ -44,6 +44,7 @@ class _InformationFormState extends State<InformationForm> {
               children: <Widget>[
                 _instructionTile(),
                 Divider(color: Colors.white),
+                _overallInstruction(),
                 _nameField(),
                 _schoolNameField(),
                 _gradeLevelField(),
