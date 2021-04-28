@@ -60,7 +60,8 @@ class _InformationFormState extends State<InformationForm> {
   }
 
   Widget _overallInstruction() {
-    return Expanded(
+    return SizedBox(
+      height: 50.0,
       child: AutoSizeText(
         '請填上基本資料',
         maxLines: 1,
