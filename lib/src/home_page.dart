@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:random_color/random_color.dart';
 
@@ -45,8 +46,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                     _instructionTile(),
                     Divider(color: Colors.white),
-                    Text('請依次序完成各部分',
-                        style: Theme.of(context).textTheme.headline4),
+                    _overallInstruction(),
                   ] +
                   buttons,
             ),
@@ -54,6 +54,18 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
       onWillPop: () async => false,
+    );
+  }
+
+  Widget _overallInstruction() {
+    return SizedBox(
+      height: 50.0,
+      child: AutoSizeText(
+        '請依次序完成各部分',
+        maxLines: 1,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.headline4,
+      ),
     );
   }
 
