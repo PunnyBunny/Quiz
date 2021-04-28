@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 
@@ -43,7 +44,6 @@ class _InformationFormState extends State<InformationForm> {
               children: <Widget>[
                 _instructionTile(),
                 Divider(color: Colors.white),
-                Text('請填上基本資料', style: Theme.of(context).textTheme.headline4),
                 _nameField(),
                 _schoolNameField(),
                 _gradeLevelField(),
@@ -54,6 +54,17 @@ class _InformationFormState extends State<InformationForm> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _overallInstruction() {
+    return Expanded(
+      child: AutoSizeText(
+        '請填上基本資料',
+        maxLines: 1,
+        textAlign: TextAlign.center,
+        style: Theme.of(context).textTheme.headline4,
       ),
     );
   }

@@ -1,7 +1,7 @@
-name: quiz
+name: VACA
 description: HKU Adolescent Language Test
 publish_to: "none"
-version: 1.0.0+3
+version: 1.0.0+8
 
 
 environment:
@@ -19,6 +19,7 @@ dependencies:
   path_provider: ^1.6.24
   permission_handler: ^5.0.1+1
   flutter_archive: ^1.0.3
+  auto_size_text: ^2.1.0
 
 dev_dependencies:
   build_runner: ^1.0.0
