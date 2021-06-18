@@ -68,7 +68,7 @@ class AudioSummaryPage extends StatelessWidget {
         ..fields['grade_level'] = _result.gradeLevel
         ..fields['length'] = '${_result.testLength}'
         ..files.add(await http.MultipartFile.fromPath('audios', zipFile.path));
-      final response = await request.send().timeout(Duration(seconds: 5));
+      final response = await request.send().timeout(Duration(seconds: 1));
       print(response.statusCode);
       assert(response.statusCode == 200);
     });

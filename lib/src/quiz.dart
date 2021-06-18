@@ -696,4 +696,3 @@ class _QuizState extends State<Quiz> {
     setState(() {});
   }
 }
-
