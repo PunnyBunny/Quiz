@@ -1,5 +1,5 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.study.quiz">
+    package="com.sunnycheung.quiz">
     <!-- io.flutter.app.FlutterApplication is an android.app.Application that
          calls FlutterMain.startInitialization(this); in its onCreate method.
          In most cases you can leave this as-is, but you if you want to provide
@@ -16,10 +16,10 @@
 
     <application
         android:allowBackup="false"
-        android:name="io.flutter.app.FlutterApplication"
         android:icon="@mipmap/ic_launcher"
+        android:label="粵語語義能力測試"
         android:usesCleartextTraffic="true"
-        android:label="quiz">
+        android:versionCode="0" >
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
