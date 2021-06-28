@@ -19,7 +19,7 @@
         android:icon="@mipmap/ic_launcher"
         android:label="粵語語義能力測試"
         android:usesCleartextTraffic="true"
-        android:versionCode="0" >
+        android:versionCode="9" >
         <activity
             android:name=".MainActivity"
             android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
